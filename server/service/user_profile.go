@@ -1,0 +1,54 @@
+package service
+
+import (
+	"time"
+	"wukong/pkg/util"
+	"wukong/server/model"
+)
+
+func (s *Service) UpdateUserProfile(user *model.User, token *model.Token) *model.Error {
+	if token == nil {
+		return model.NewError("token is nil")
+	}
+	nowTime := time.Now().Format("2006-01-02 15:04:05")
+	dal := newDal(&options{})
+	user.Username = ""
+	user.Id = token.UserId
+	user.UpdateTime = nowTime
+	if len(user.Password) > 0 {
+		if !util.IsPassword(user.Password) {
+			return model.NewError("密码格式不正确", true)
+		}
+		user.Password = util.CreatePassword(user.Password)
+	}
+	if err := dal.Update(&user); err != nil {
+		return &model.Error{Err: err}
+	}
+	return nil
+}
+
+func (s *Service) GetUserProfile(token *model.Token) (map[string]any, *model.Error) {
+	if token == nil {
+		return nil, model.NewError("token is nil")
+	}
+	var user model.User
+	dal := newDal(&options{})
+	userId := token.UserId
+	// 获取权限
+	rbac := GetRBAC(userId)
+
+	// 获取用户信息
+	user.Id = userId
+	_ = dal.Get(&user)
+	userInfo := make(map[string]any)
+	var resUser model.User
+	resUser.Username = user.Username
+	resUser.Email = user.Email
+	resUser.Mobile = user.Mobile
+	resUser.DisplayName = user.DisplayName
+	resUser.IsActive = user.IsActive
+	userInfo["rbac"] = rbac
+	userInfo["user"] = resUser
+
+	return userInfo, nil
+}

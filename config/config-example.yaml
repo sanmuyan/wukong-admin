@@ -1,0 +1,9 @@
+database:
+  mysql: root:password@tcp(localhost:3306)/wukong
+  redis: localhost:6379
+token_ttl: 86400
+secret:
+  # 用于JWT 签名的密钥，该字符串应该使用CFB 加密
+  token_key: ""
+log_level: 4
+
