@@ -30,7 +30,7 @@ type QueryOptions struct {
 }
 
 type mysql struct {
-	QueryOptions
+	*QueryOptions
 	WhereData any
 }
 
@@ -39,6 +39,6 @@ func NewDal() Client {
 }
 
 func (c *mysql) SetQuery(query *QueryOptions) Client {
-	c.QueryOptions = *query
+	c.QueryOptions = query
 	return c
 }
