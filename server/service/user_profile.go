@@ -11,7 +11,6 @@ func (s *Service) UpdateUserProfile(user *model.User, token *model.Token) *model
 		return model.NewError("token is nil")
 	}
 	nowTime := time.Now().Format("2006-01-02 15:04:05")
-	dal := newDal(&options{})
 	user.Username = ""
 	user.Id = token.UserId
 	user.UpdateTime = nowTime
@@ -21,7 +20,7 @@ func (s *Service) UpdateUserProfile(user *model.User, token *model.Token) *model
 		}
 		user.Password = util.CreatePassword(user.Password)
 	}
-	if err := dal.Update(&user); err != nil {
+	if err := dalf().Update(&user); err != nil {
 		return &model.Error{Err: err}
 	}
 	return nil
@@ -32,14 +31,13 @@ func (s *Service) GetUserProfile(token *model.Token) (map[string]any, *model.Err
 		return nil, model.NewError("token is nil")
 	}
 	var user model.User
-	dal := newDal(&options{})
 	userId := token.UserId
 	// 获取权限
-	rbac := GetRBAC(userId)
+	rbac := s.GetRBAC(userId)
 
 	// 获取用户信息
 	user.Id = userId
-	_ = dal.Get(&user)
+	_ = dalf().Get(&user)
 	userInfo := make(map[string]any)
 	var resUser model.User
 	resUser.Username = user.Username

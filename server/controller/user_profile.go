@@ -8,32 +8,30 @@ import (
 )
 
 func UpdateUserProfile(c *gin.Context) {
-	resp := response.NewResponse()
 	var user model.User
 	if err := c.ShouldBindJSON(&user); err != nil {
-		resp.Fail(response.HttpBadRequest).SetGin(c)
+		respf().Fail(response.HttpBadRequest).SetGin(c)
 		return
 	}
 	err := svc.UpdateUserProfile(&user, keysToUserToken(c.Keys))
 	if err != nil {
 		logrus.Errorf("更新用户配置: %s", err.Err)
 		if err.IsResponseMsg {
-			resp.FailWithMsg(response.HttpInternalServerError, err.Err.Error()).SetGin(c)
+			respf().Fail(response.HttpInternalServerError).WithMsg(err.Err.Error()).SetGin(c)
 		} else {
-			resp.Fail(response.HttpInternalServerError).SetGin(c)
+			respf().Fail(response.HttpInternalServerError).SetGin(c)
 		}
 		return
 	}
-	resp.Ok().SetGin(c)
+	respf().Ok().SetGin(c)
 }
 
 func GetUserProfile(c *gin.Context) {
-	resp := response.NewResponse()
 	userInfo, err := svc.GetUserProfile(keysToUserToken(c.Keys))
 	if err != nil {
 		logrus.Errorf("获取用户配置: %s", err.Err)
-		resp.Fail(response.HttpInternalServerError).SetGin(c)
+		respf().Fail(response.HttpInternalServerError).SetGin(c)
 		return
 	}
-	resp.OkWithData(userInfo).SetGin(c)
+	respf().Ok().WithData(userInfo).SetGin(c)
 }

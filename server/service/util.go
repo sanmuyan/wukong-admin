@@ -2,18 +2,14 @@ package service
 
 import (
 	"wukong/pkg/dal"
+	"wukong/pkg/page"
 	"wukong/server/model"
 )
 
-type options struct {
-	dal.Options
-}
-
-func newDal(opt *options) dal.Client {
-	return dal.NewDal(&opt.Options)
-}
-
-func (opt *options) setQuery(query *model.Query) {
+func setQuery(query *model.Query) *dal.QueryOptions {
+	opt := &dal.QueryOptions{
+		Page: &page.Page{},
+	}
 	opt.Page.PageNumber = query.PageNumber
 	opt.Page.PageSize = query.PageSize
 
@@ -27,4 +23,6 @@ func (opt *options) setQuery(query *model.Query) {
 		opt.QueryType = 0
 		opt.QueryMust = query.QueryMustMap
 	}
+
+	return opt
 }

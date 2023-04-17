@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"time"
@@ -11,8 +10,7 @@ import (
 	"wukong/server/model"
 )
 
-func CreateOrSetToken(token model.Token) (tokenStr string, err error) {
-	var ctx = context.Background()
+func (s *Service) CreateOrSetToken(token model.Token) (tokenStr string, err error) {
 	token.Timestamp = time.Now().Unix()
 	if token.TokenType != "session" && token.TokenType != "api" {
 		return tokenStr, errors.New("tokenType must session or api")
@@ -25,7 +23,7 @@ func CreateOrSetToken(token model.Token) (tokenStr string, err error) {
 	if err != nil {
 		return tokenStr, err
 	}
-	if err = db.RDB.Set(ctx, model.TokenKeyName(token.Username, token.TokenType), tokenStr, time.Duration(token.TTL*1000000000)).Err(); err != nil {
+	if err = db.RDB.Set(s.ctx, model.TokenKeyName(token.Username, token.TokenType), tokenStr, time.Duration(token.TTL*1000000000)).Err(); err != nil {
 		return tokenStr, err
 	}
 	return tokenStr, err

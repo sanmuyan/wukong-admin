@@ -1,6 +1,9 @@
 package service
 
-import "context"
+import (
+	"context"
+	"wukong/pkg/dal"
+)
 
 // 接口逻辑实现在service 中实现
 
@@ -12,4 +15,8 @@ func NewService() *Service {
 	return &Service{
 		ctx: context.Background(),
 	}
+}
+
+var dalf = func() dal.Client {
+	return dal.NewDal()
 }

@@ -11,47 +11,34 @@ type Client interface {
 	Create(any) error
 	Update(any) error
 	Delete(any) error
-	Where(any) *dal
-	Closed()
+	Where(any) Client
+	SetQuery(*QueryOptions) Client
 }
 
-var _ Client = &dal{}
+var _ Client = &mysql{}
 
 type QueryLike struct {
 	Keys  string
 	Value string
 }
 
-type dal struct {
-	page      *page.Page
-	queryLike *QueryLike
-	queryMust *map[string]any
-	queryType *int
-	whereData any
-}
-
-type Options struct {
-	Page      page.Page
+type QueryOptions struct {
+	Page      *page.Page
 	QueryLike QueryLike
 	QueryMust map[string]any
 	QueryType int
 }
 
-func NewDal(opt *Options) Client {
-	d := &dal{
-		page:      &opt.Page,
-		queryMust: &opt.QueryMust,
-		queryLike: &opt.QueryLike,
-		queryType: &opt.QueryType,
-	}
-	return d
+type mysql struct {
+	QueryOptions
+	WhereData any
 }
 
-func (c *dal) Closed() {
-	// 避免不当使用造成的数据污染
-	var d dal
-	c.queryLike = d.queryLike
-	c.queryMust = d.queryMust
-	c.queryType = d.queryType
-	c.whereData = d.whereData
+func NewDal() Client {
+	return &mysql{}
+}
+
+func (c *mysql) SetQuery(query *QueryOptions) Client {
+	c.QueryOptions = *query
+	return c
 }

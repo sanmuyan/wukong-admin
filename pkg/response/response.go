@@ -49,15 +49,6 @@ func (r *Response) Ok() *Response {
 	return r
 }
 
-func (r *Response) OkWithData(data any) *Response {
-	code := HttpOk
-	r.Code = code
-	r.Success = true
-	r.Message = code.GetMessage()
-	r.Data = data
-	return r
-}
-
 func (r *Response) Fail(code Code) *Response {
 	r.Code = code
 	r.Success = false
@@ -65,9 +56,12 @@ func (r *Response) Fail(code Code) *Response {
 	return r
 }
 
-func (r *Response) FailWithMsg(code Code, msg string) *Response {
-	r.Code = code
-	r.Success = false
+func (r *Response) WithData(data any) *Response {
+	r.Data = data
+	return r
+}
+
+func (r *Response) WithMsg(msg string) *Response {
 	r.Message = msg
 	return r
 }

@@ -13,6 +13,12 @@ import (
 	"wukong/server/service"
 )
 
+var svc = service.NewService()
+
+var respf = func() *response.Response {
+	return response.NewResponse()
+}
+
 func AccessControl() gin.HandlerFunc {
 	// 1. 校验 token 是否有效或过期 2. 校验 token 是否有权限访问资源
 	return func(c *gin.Context) {
@@ -33,20 +39,19 @@ func AccessControl() gin.HandlerFunc {
 			if t := db.RDB.Get(ctx, model.TokenKeyName(token.Username, token.TokenType)).Val(); t != reqToken {
 				return model.NewError("令牌已过期")
 			}
-			if !service.IsAccessResource(token, c) {
+			if !svc.IsAccessResource(token, c) {
 				return model.NewError("无权访问", true)
 			}
 			return nil
 		}
 
-		var resp = response.NewResponse()
 		err := res()
 		if err != nil {
 			logrus.Infof("身份验证错误: %s", err.Err.Error())
 			if err.IsResponseMsg {
-				resp.FailWithMsg(response.HttpUnauthorized, err.Err.Error()).SetGin(c)
+				respf().Fail(response.HttpForbidden).WithMsg(err.Err.Error()).SetGin(c)
 			} else {
-				resp.Fail(response.HttpUnauthorized).SetGin(c)
+				respf().Fail(response.HttpUnauthorized).SetGin(c)
 			}
 			c.Abort()
 			return

@@ -10,9 +10,8 @@ import (
 
 func (s *Service) Login(login model.Login) (string, *model.Error) {
 	var user model.User
-	dal := newDal(&options{})
 	user.Username = login.Username
-	if err := dal.Get(&user); err != nil {
+	if err := dalf().Get(&user); err != nil {
 		return "", model.NewError(err.Error())
 	}
 	if user.Id == 0 || !util.ComparePassword(user.Password, login.Password) || user.IsActive == 0 {
@@ -22,11 +21,11 @@ func (s *Service) Login(login model.Login) (string, *model.Error) {
 	token := model.Token{
 		UserId:      user.Id,
 		Username:    user.Username,
-		AccessLevel: GetMaxAccessLevel(user.Id),
+		AccessLevel: s.GetMaxAccessLevel(user.Id),
 		TokenType:   "session",
 		TTL:         config.Conf.TokenTTL,
 	}
-	tokenStr, err := CreateOrSetToken(token)
+	tokenStr, err := s.CreateOrSetToken(token)
 	if err != nil {
 		return "", model.NewError(err.Error())
 	}
