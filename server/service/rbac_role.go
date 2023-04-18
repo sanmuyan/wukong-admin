@@ -23,7 +23,7 @@ func (s *Service) CreateRole(role *model.Role) *model.Error {
 }
 
 func (s *Service) UpdateRole(role *model.Role) *model.Error {
-	if err := dalf().Update(&role); err != nil {
+	if err := dalf().Save(&role); err != nil {
 		return &model.Error{Err: err}
 	}
 	return nil

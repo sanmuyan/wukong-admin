@@ -46,13 +46,20 @@ func (s *Service) CreateUser(user *model.User) *model.Error {
 func (s *Service) UpdateUser(user *model.User) *model.Error {
 	nowTime := time.Now().Format("2006-01-02 15:04:05")
 	user.UpdateTime = nowTime
+	currentUser := &model.User{Id: user.Id}
+	if err := dalf().Get(currentUser); err != nil {
+		return model.NewError(err.Error())
+	}
 	if len(user.Password) > 0 {
 		if !util.IsPassword(user.Password) {
 			return model.NewError("密码不符合要求", true)
 		}
 		user.Password = util.CreatePassword(user.Password)
+	} else {
+		user.Password = currentUser.Password
 	}
-	if err := dalf().Update(&user); err != nil {
+	user.CreateTime = currentUser.CreateTime
+	if err := dalf().Save(&user); err != nil {
 		return model.NewError(err.Error())
 	}
 	return nil

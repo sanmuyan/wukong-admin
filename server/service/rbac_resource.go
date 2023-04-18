@@ -23,7 +23,7 @@ func (s *Service) CreateResource(resource *model.Resource) *model.Error {
 }
 
 func (s *Service) UpdateResource(resource *model.Resource) *model.Error {
-	if err := dalf().Update(&resource); err != nil {
+	if err := dalf().Save(&resource); err != nil {
 		return model.NewError(err.Error())
 	}
 	return nil

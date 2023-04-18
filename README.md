@@ -73,8 +73,8 @@ server {
 先导入测试数据
 ```sql
 INSERT INTO `wukong`.`wk_rbac_resource`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/user', 1, '用户');
-INSERT INTO `wukong`.`wk_rbac_resource`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/user/owner', 0, '用户个人信息');
-INSERT INTO `wukong`.`wk_rbac_resource`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/logout', 0, '退出登录');
+INSERT INTO `wukong`.`wk_rbac_resource`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/user/profile', 2, '用户个人信息');
+INSERT INTO `wukong`.`wk_rbac_resource`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/logout', 2, '退出登录');
 
 INSERT INTO `wukong`.`wk_rbac_role`(`id`, `role_name`, `access_level`, `comment`) VALUES (1, 'base', 1, '基本用户');
 INSERT INTO `wukong`.`wk_rbac_role`(`id`, `role_name`, `access_level`, `comment`) VALUES (2, 'admin', 100, '管理员');

@@ -9,7 +9,7 @@ type Client interface {
 	Query(any) error
 	Get(any) error
 	Create(any) error
-	Update(any) error
+	Save(any) error
 	Delete(any) error
 	Where(any) Client
 	SetQuery(*QueryOptions) Client

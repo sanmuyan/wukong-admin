@@ -14,7 +14,7 @@ func (s *Service) Login(login model.Login) (string, *model.Error) {
 	if err := dalf().Get(&user); err != nil {
 		return "", model.NewError(err.Error())
 	}
-	if user.Id == 0 || !util.ComparePassword(user.Password, login.Password) || user.IsActive == 0 {
+	if user.Id == 0 || !util.ComparePassword(user.Password, login.Password) || user.IsActive != 1 {
 		return "", model.NewError("用户名或密码错误", true)
 	}
 

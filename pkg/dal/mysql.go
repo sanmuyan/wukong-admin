@@ -64,8 +64,9 @@ func (c *mysql) Create(data any) error {
 	return nil
 }
 
-func (c *mysql) Update(data any) error {
-	if err := db.DB.Model(data).Updates(data).Error; err != nil {
+func (c *mysql) Save(data any) error {
+	// save 会保存空值
+	if err := db.DB.Save(data).Error; err != nil {
 		return err
 	}
 	return nil

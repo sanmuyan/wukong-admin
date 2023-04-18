@@ -13,12 +13,12 @@ func (s *Service) IsAuth(routePath string) bool {
 	var resource model.Resource
 	resource.ResourcePath = routePath
 	if err := dalf().Get(&resource); err != nil {
-		return false
-	}
-	if resource.IsAuth == 1 {
 		return true
 	}
-	return false
+	if resource.IsAuth != 1 {
+		return false
+	}
+	return true
 }
 
 func (s *Service) GetRBAC(userId int) model.RBAC {
@@ -86,7 +86,7 @@ func (s *Service) IsAccessResource(token model.Token, c *gin.Context) bool {
 	routePath := c.FullPath()
 	var user model.User
 	user.Id = userId
-	if err := dalf().Get(&user); err != nil || user.IsActive == 0 {
+	if err := dalf().Get(&user); err != nil || user.IsActive != 1 {
 		return false
 	}
 	// 判断是否为管理员, 管理员无需执行下面的流程
