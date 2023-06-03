@@ -20,7 +20,7 @@ func (s *Service) UpdateUserProfile(user *model.User, token *model.Token) *model
 		}
 		user.Password = util.CreatePassword(user.Password)
 	}
-	if err := dalf().Update(&user); err != nil {
+	if err := dalf().Save(&user); err != nil {
 		return &model.Error{Err: err}
 	}
 	return nil
