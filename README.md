@@ -59,11 +59,15 @@ server {
     server_name localhost;
     # 前端
     location / {
+        # 如果是打包好的静态文件
+        # root /wukong-admin-web/dist;
+        # 历史路由模式需要设置路由回退
+        # try_files $uri $uri/ /index.html;
         proxy_pass http://localhost:8080;
     }
     # 后端接口
     location /api {
-        proxy_pass http://localhost:8080;
+        proxy_pass http://localhost:8081;
     }
 }
 ```
