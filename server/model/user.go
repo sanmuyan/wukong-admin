@@ -1,6 +1,6 @@
 package model
 
-import "github.com/golang-jwt/jwt"
+import "errors"
 
 type Token struct {
 	UserId      int    `json:"user_id" binding:"required"`
@@ -8,7 +8,26 @@ type Token struct {
 	AccessLevel int    `json:"access_level" binding:"required"`
 	TokenType   string `json:"token_type" binding:"required"`
 	ExpiresTime int64  `json:"expires_time"`
-	jwt.StandardClaims
+}
+
+func (t Token) Valid() error {
+	err := errors.New("required is nil")
+	if t.UserId == 0 {
+		return err
+	}
+	if t.Username == "" {
+		return err
+	}
+	if t.TokenType == "" {
+		return err
+	}
+	if t.TokenType != "api" && t.TokenType != "session" {
+		return err
+	}
+	if t.TokenType == "session" && t.ExpiresTime == 0 {
+		return err
+	}
+	return nil
 }
 
 func TokenKeyName(userName string, tokenType string) string {
