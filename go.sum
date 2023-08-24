@@ -206,6 +206,8 @@ github.com/rogpeppe/go-internal v1.6.1/go.mod h1:xXDCJY+GAPziupqXw64V24skbSoqbTE
 github.com/russross/blackfriday/v2 v2.1.0/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/sanmuyan/dao v0.3.1 h1:R+722UJp27Qd1Mm6VgzKD4NB+7tRrlzvQ+4iln9JaXQ=
 github.com/sanmuyan/dao v0.3.1/go.mod h1:TYP7m+keJd5j1zB591th2z56iQQOALRUDuk+HmYFTkI=
+github.com/sanmuyan/dao v0.3.2 h1:M5l2QAUXPTuLAdMbums+vmg5JoiUqwhyPpijrUHVTgs=
+github.com/sanmuyan/dao v0.3.2/go.mod h1:TYP7m+keJd5j1zB591th2z56iQQOALRUDuk+HmYFTkI=
 github.com/sirupsen/logrus v1.8.1 h1:dJKuHgqk1NNQlqoA6BTlM1Wf9DOH3NBjQyu0h9+AZZE=
 github.com/sirupsen/logrus v1.8.1/go.mod h1:yWOB1SBYBC5VeMP7gHvWumXLIWorT60ONWic61uBYv0=
 github.com/spf13/afero v1.9.3 h1:41FoI0fD7OR7mGcKE/aOiLkGreyf8ifIOQmJANWogMk=

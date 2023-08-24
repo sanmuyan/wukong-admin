@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/sanmuyan/dao/response"
-	tokenutil "github.com/sanmuyan/dao/token"
+	"github.com/sanmuyan/dao/secret"
 	"github.com/sirupsen/logrus"
 	"time"
 	"wukong/pkg/config"
@@ -26,7 +26,7 @@ func AccessControl() gin.HandlerFunc {
 			if reqToken == "" {
 				return model.NewError("未携带令牌")
 			}
-			_, err := tokenutil.ParseToken(reqToken, config.Conf.Secret.TokenKey, &token)
+			_, err := secret.ParseToken(reqToken, config.Conf.Secret.TokenKey, &token)
 			if err != nil {
 				return model.NewError(err.Error())
 			}

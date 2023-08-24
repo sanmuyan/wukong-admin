@@ -1,7 +1,7 @@
 package service
 
 import (
-	tokenutil "github.com/sanmuyan/dao/token"
+	"github.com/sanmuyan/dao/secret"
 	"time"
 	"wukong/pkg/config"
 	"wukong/pkg/db"
@@ -17,7 +17,7 @@ func (s *Service) CreateOrSetToken(token model.Token) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	tokenStr, err := tokenutil.CreateToken(token, config.Conf.Secret.TokenKey)
+	tokenStr, err := secret.CreateToken(token, config.Conf.Secret.TokenKey)
 	if err != nil {
 		return "", err
 	}
