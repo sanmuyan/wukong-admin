@@ -2,3 +2,5 @@
 .vscode
 /config/*dev*
 /build/*dev*
+go.work
+go.work.sum

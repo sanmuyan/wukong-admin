@@ -2,8 +2,9 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/sanmuyan/dao/response"
 	"github.com/sirupsen/logrus"
-	"wukong/pkg/response"
+	"wukong/pkg/util"
 	"wukong/server/model"
 )
 
@@ -13,36 +14,36 @@ func GetRoleBinds(c *gin.Context) {
 	roleBinds, err := svc.GetRoleBinds(getQuery(c, likeKeys, mustKeys))
 	if err != nil {
 		logrus.Errorf("获取角色绑定列表: %s", err.Err)
-		respf().Fail(response.HttpInternalServerError).SetGin(c)
+		util.Respf().Fail(response.HttpInternalServerError).Response(util.GinRespf(c))
 		return
 	}
-	respf().Ok().WithData(roleBinds).SetGin(c)
+	util.Respf().Ok().WithData(roleBinds).Response(util.GinRespf(c))
 }
 
 func CreateRoleBind(c *gin.Context) {
 	var roleBind model.RoleBind
 	if err := c.ShouldBindJSON(&roleBind); err != nil {
-		respf().Fail(response.HttpBadRequest).SetGin(c)
+		util.Respf().Fail(response.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
 	if err := svc.CreateRoleBind(&roleBind); err != nil {
 		logrus.Errorf("创建角色绑定: %s", err.Err)
-		respf().Fail(response.HttpInternalServerError).SetGin(c)
+		util.Respf().Fail(response.HttpInternalServerError).Response(util.GinRespf(c))
 		return
 	}
-	respf().Ok().SetGin(c)
+	util.Respf().Ok().Response(util.GinRespf(c))
 }
 
 func DeleteRoleBind(c *gin.Context) {
 	var roleBind model.RoleBind
 	if err := c.ShouldBindJSON(&roleBind); err != nil {
-		respf().Fail(response.HttpBadRequest).SetGin(c)
+		util.Respf().Fail(response.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
 	if err := svc.DeleteRoleBind(&roleBind); err != nil {
 		logrus.Errorf("删除角色绑定: %s", err.Err)
-		respf().Fail(response.HttpInternalServerError).SetGin(c)
+		util.Respf().Fail(response.HttpInternalServerError).Response(util.GinRespf(c))
 		return
 	}
-	respf().Ok().SetGin(c)
+	util.Respf().Ok().Response(util.GinRespf(c))
 }

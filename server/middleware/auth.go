@@ -2,22 +2,19 @@ package middleware
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"github.com/sanmuyan/dao/response"
+	tokenutil "github.com/sanmuyan/dao/token"
 	"github.com/sirupsen/logrus"
+	"time"
 	"wukong/pkg/config"
 	"wukong/pkg/db"
-	"wukong/pkg/response"
 	"wukong/pkg/util"
 	"wukong/server/model"
 	"wukong/server/service"
 )
 
 var svc = service.NewService()
-
-var respf = func() *response.Response {
-	return response.NewResponse()
-}
 
 func AccessControl() gin.HandlerFunc {
 	// 1. 校验 token 是否有效或过期 2. 校验 token 是否有权限访问资源
@@ -29,14 +26,14 @@ func AccessControl() gin.HandlerFunc {
 			if reqToken == "" {
 				return model.NewError("未携带令牌")
 			}
-			tokenClaims, err := util.ExtractToken(reqToken, config.Conf.Secret.TokenKey)
+			_, err := tokenutil.ParseToken(reqToken, config.Conf.Secret.TokenKey, &token)
 			if err != nil {
 				return model.NewError(err.Error())
 			}
-			if err = json.Unmarshal(tokenClaims.Body, &token); err != nil {
-				return model.NewError(err.Error())
+			if token.ExpiresTime > 0 && token.ExpiresTime < time.Now().UTC().Unix() || token.UserId == 0 {
+				return model.NewError("令牌已过期")
 			}
-			if t := db.RDB.Get(ctx, model.TokenKeyName(token.Username, token.TokenType)).Val(); t != reqToken {
+			if e := db.RDB.Exists(ctx, model.TokenKeyName(token.Username, token.TokenType)).Val(); e == 0 {
 				return model.NewError("令牌已过期")
 			}
 			if !svc.IsAccessResource(token, c) {
@@ -49,9 +46,9 @@ func AccessControl() gin.HandlerFunc {
 		if err != nil {
 			logrus.Infof("身份验证错误: %s", err.Err.Error())
 			if err.IsResponseMsg {
-				respf().Fail(response.HttpForbidden).WithMsg(err.Err.Error()).SetGin(c)
+				util.Respf().Fail(response.HttpForbidden).WithMsg(err.Err.Error()).Response(util.GinRespf(c))
 			} else {
-				respf().Fail(response.HttpUnauthorized).SetGin(c)
+				util.Respf().Fail(response.HttpUnauthorized).Response(util.GinRespf(c))
 			}
 			c.Abort()
 			return

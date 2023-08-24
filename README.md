@@ -19,7 +19,7 @@ https://github.com/sanmuyan/wukong-admin-web
 
 - mysql 8.0
 - redis 5.0
-- go 1.18
+- go 1.21.0
 - node 16.14.2
 - nginx
 - 一个长度为32的随机字符串，用于加密JWT的签名秘钥, 配置位置 secret.token_key

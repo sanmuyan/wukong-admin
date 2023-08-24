@@ -7,8 +7,7 @@ type Token struct {
 	Username    string `json:"username" binding:"required"`
 	AccessLevel int    `json:"access_level" binding:"required"`
 	TokenType   string `json:"token_type" binding:"required"`
-	TTL         int    `json:"ttl"`
-	Timestamp   int64  `json:"timestamp"`
+	ExpiresTime int64  `json:"expires_time"`
 	jwt.StandardClaims
 }
 

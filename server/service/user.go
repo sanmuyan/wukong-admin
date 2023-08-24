@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/sanmuyan/dao/password"
 	"time"
 	"wukong/pkg/util"
 	"wukong/server/model"
@@ -25,7 +26,7 @@ func (s *Service) CreateUser(user *model.User) *model.Error {
 	if !util.IsUserName(user.Username) {
 		return model.NewError("用户名不符合要求", true)
 	}
-	if !util.IsPassword(user.Password) {
+	if !password.IsPasswordComplexity(user.Password, 8, true, true, true, true) {
 		return model.NewError("密码不符合要求", true)
 	}
 	_ = dalf().Get(&model.User{Username: user.Username})
@@ -36,7 +37,7 @@ func (s *Service) CreateUser(user *model.User) *model.Error {
 	user.IsActive = 1
 	user.UpdateTime = nowTime
 	user.CreateTime = nowTime
-	user.Password = util.CreatePassword(user.Password)
+	user.Password = password.CreatePassword(user.Password)
 	if err := dalf().Create(&user); err != nil {
 		return model.NewError(err.Error())
 	}
@@ -51,10 +52,10 @@ func (s *Service) UpdateUser(user *model.User) *model.Error {
 		return model.NewError(err.Error())
 	}
 	if len(user.Password) > 0 {
-		if !util.IsPassword(user.Password) {
+		if !password.IsPasswordComplexity(user.Password, 8, true, true, true, true) {
 			return model.NewError("密码不符合要求", true)
 		}
-		user.Password = util.CreatePassword(user.Password)
+		user.Password = password.CreatePassword(user.Password)
 	} else {
 		user.Password = currentUser.Password
 	}

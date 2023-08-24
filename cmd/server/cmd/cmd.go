@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/sanmuyan/dao/secret"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -10,7 +11,6 @@ import (
 	"runtime"
 	"wukong/pkg/config"
 	"wukong/pkg/db"
-	"wukong/pkg/util"
 	"wukong/server/controller"
 )
 
@@ -98,7 +98,7 @@ func Execute() {
 }
 
 func initConfigPost() {
-	err := util.DecryptCFBToStruct(&config.Conf.Secret, config.Conf.ConfigSecretKey)
+	err := secret.DecryptCFBToStruct(&config.Conf.Secret, config.Conf.ConfigSecretKey)
 	if err != nil {
 		logrus.Fatal(err)
 	}
