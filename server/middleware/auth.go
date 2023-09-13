@@ -3,8 +3,8 @@ package middleware
 import (
 	"context"
 	"github.com/gin-gonic/gin"
-	"github.com/sanmuyan/dao/response"
-	"github.com/sanmuyan/dao/secret"
+	"github.com/sanmuyan/xpkg/xjwt"
+	"github.com/sanmuyan/xpkg/xresponse"
 	"github.com/sirupsen/logrus"
 	"time"
 	"wukong/pkg/config"
@@ -26,7 +26,7 @@ func AccessControl() gin.HandlerFunc {
 			if reqToken == "" {
 				return model.NewError("未携带令牌")
 			}
-			_, err := secret.ParseToken(reqToken, config.Conf.Secret.TokenKey, &token)
+			_, err := xjwt.ParseToken(reqToken, config.Conf.Secret.TokenKey, &token)
 			if err != nil {
 				return model.NewError(err.Error())
 			}
@@ -46,9 +46,9 @@ func AccessControl() gin.HandlerFunc {
 		if err != nil {
 			logrus.Infof("身份验证错误: %s", err.Err.Error())
 			if err.IsResponseMsg {
-				util.Respf().Fail(response.HttpForbidden).WithMsg(err.Err.Error()).Response(util.GinRespf(c))
+				util.Respf().Fail(xresponse.HttpForbidden).WithMsg(err.Err.Error()).Response(util.GinRespf(c))
 			} else {
-				util.Respf().Fail(response.HttpUnauthorized).Response(util.GinRespf(c))
+				util.Respf().Fail(xresponse.HttpUnauthorized).Response(util.GinRespf(c))
 			}
 			c.Abort()
 			return

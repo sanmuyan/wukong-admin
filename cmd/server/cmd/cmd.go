@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/sanmuyan/dao/secret"
+	"github.com/sanmuyan/xpkg/xcrypto"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -98,7 +98,7 @@ func Execute() {
 }
 
 func initConfigPost() {
-	err := secret.DecryptCFBToStruct(&config.Conf.Secret, config.Conf.ConfigSecretKey)
+	err := xcrypto.DecryptCFBToStruct(&config.Conf.Secret, config.Conf.ConfigSecretKey)
 	if err != nil {
 		logrus.Fatal(err)
 	}

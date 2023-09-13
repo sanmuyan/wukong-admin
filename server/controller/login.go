@@ -2,7 +2,7 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/sanmuyan/dao/response"
+	"github.com/sanmuyan/xpkg/xresponse"
 	"github.com/sirupsen/logrus"
 	"wukong/pkg/util"
 	"wukong/server/model"
@@ -11,16 +11,16 @@ import (
 func Login(c *gin.Context) {
 	var login model.Login
 	if err := c.ShouldBindJSON(&login); err != nil {
-		util.Respf().Fail(response.HttpBadRequest).Response(util.GinRespf(c))
+		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
 	token, err := svc.Login(login)
 	if err != nil {
 		logrus.Errorf("用户登陆失败: %s", err.Err)
 		if err.IsResponseMsg {
-			util.Respf().Fail(response.HttpUnauthorized).WithMsg(err.Err.Error()).Response(util.GinRespf(c))
+			util.Respf().Fail(xresponse.HttpUnauthorized).WithMsg(err.Err.Error()).Response(util.GinRespf(c))
 		} else {
-			util.Respf().Fail(response.HttpInternalServerError).Response(util.GinRespf(c))
+			util.Respf().Fail(xresponse.HttpInternalServerError).Response(util.GinRespf(c))
 		}
 		return
 	}
@@ -32,7 +32,7 @@ func Login(c *gin.Context) {
 func Logout(c *gin.Context) {
 	if err := svc.Logout(keysToUserToken(c.Keys)); err != nil {
 		logrus.Errorf("用户登出失败: %s", err.Err)
-		util.Respf().Fail(response.HttpInternalServerError).Response(util.GinRespf(c))
+		util.Respf().Fail(xresponse.HttpInternalServerError).Response(util.GinRespf(c))
 		return
 	}
 	util.Respf().Ok().Response(util.GinRespf(c))

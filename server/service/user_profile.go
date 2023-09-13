@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/sanmuyan/dao/secret"
+	"github.com/sanmuyan/xpkg/xbcrypt"
 	"time"
 	"wukong/server/model"
 )
@@ -15,10 +15,10 @@ func (s *Service) UpdateUserProfile(user *model.User, token *model.Token) *model
 	user.Id = token.UserId
 	user.UpdateTime = nowTime
 	if len(user.Password) > 0 {
-		if !secret.IsPasswordComplexity(user.Password, 8, true, true, true, true) {
+		if !xbcrypt.IsPasswordComplexity(user.Password, 8, true, true, true, true) {
 			return model.NewError("密码格式不正确", true)
 		}
-		user.Password = secret.CreatePassword(user.Password)
+		user.Password = xbcrypt.CreatePassword(user.Password)
 	}
 	if err := dalf().Save(&user); err != nil {
 		return &model.Error{Err: err}
