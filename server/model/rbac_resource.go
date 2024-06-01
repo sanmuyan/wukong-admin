@@ -1,12 +1,12 @@
 package model
 
-type Resource struct {
-	Id           int    `json:"id"`
-	ResourcePath string `json:"resource_path"`
-	IsAuth       int    `json:"is_auth"`
-	Comment      string `json:"comment"`
-}
+import "time"
 
-func (Resource) TableName() string {
-	return "wk_rbac_resource"
+type Resource struct {
+	ID           int       `json:"id"`
+	ResourcePath string    `json:"resource_path"`
+	IsAuth       int       `json:"is_auth"`
+	Comment      string    `json:"comment"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }

@@ -1,34 +1,30 @@
 package service
 
 import (
+	"wukong/pkg/db"
+	"wukong/pkg/util"
 	"wukong/server/model"
 )
 
-func (s *Service) GetUserBinds(query *model.Query) (*model.UserBinds, *model.Error) {
+func (s *Service) GetUserBinds(query *model.Query) (*model.UserBinds, util.RespError) {
 	var userBinds model.UserBinds
-	opt := setQuery(query)
-	err := dalf().SetQuery(opt).Query(&userBinds.UserBinds)
+	err := queryData(query, &userBinds)
 	if err != nil {
-		return nil, model.NewError(err.Error())
+		return nil, util.NewRespError(err)
 	}
-	userBinds.Page = *opt.Page
 	return &userBinds, nil
 }
 
-func (s *Service) CreateUserBind(userBind *model.UserBind) *model.Error {
-	_ = dalf().Get(&userBind)
-	if userBind.Id != 0 {
-		return model.NewError("已存在该用户绑定", true)
-	}
-	if err := dalf().Create(&userBind); err != nil {
-		return model.NewError(err.Error())
+func (s *Service) CreateUserBind(userBind *model.UserBind) util.RespError {
+	if err := db.DB.Create(&userBind).Error; err != nil {
+		return util.NewRespError(err)
 	}
 	return nil
 }
 
-func (s *Service) DeleteUserBind(userBind *model.UserBind) *model.Error {
-	if err := dalf().Delete(&userBind); err != nil {
-		return model.NewError(err.Error())
+func (s *Service) DeleteUserBind(userBind *model.UserBind) util.RespError {
+	if err := db.DB.Delete(&model.UserBind{}, userBind.ID).Error; err != nil {
+		return util.NewRespError(err)
 	}
 	return nil
 }

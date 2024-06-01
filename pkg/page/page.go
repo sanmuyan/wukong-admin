@@ -10,6 +10,12 @@ type Page struct {
 	TotalCount int64 `json:"total_count,omitempty"`
 }
 
+func (r *Page) SetPage(p *Page) {
+	r.PageNumber = p.PageNumber
+	r.PageSize = p.PageSize
+	r.TotalCount = p.TotalCount
+}
+
 func Paginate(page *Page) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		if page.PageNumber == 0 {

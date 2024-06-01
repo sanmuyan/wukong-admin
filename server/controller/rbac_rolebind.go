@@ -14,36 +14,40 @@ func GetRoleBinds(c *gin.Context) {
 	roleBinds, err := svc.GetRoleBinds(getQuery(c, likeKeys, mustKeys))
 	if err != nil {
 		logrus.Errorf("获取角色绑定列表: %s", err.Err)
-		util.Respf().Fail(xresponse.HttpInternalServerError).Response(util.GinRespf(c))
+		util.Respf().Fail(xresponse.HttpBadRequest).WithError(err).Response(util.GinRespf(c))
 		return
 	}
 	util.Respf().Ok().WithData(roleBinds).Response(util.GinRespf(c))
 }
 
-func CreateRoleBind(c *gin.Context) {
-	var roleBind model.RoleBind
-	if err := c.ShouldBindJSON(&roleBind); err != nil {
-		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
+func CreateRoleBinds(c *gin.Context) {
+	var roleBinds []model.RoleBind
+	if err := c.ShouldBindJSON(&roleBinds); err != nil {
+		util.Respf().Fail(xresponse.HttpBadRequest).WithError(util.NewRespError(err)).Response(util.GinRespf(c))
 		return
 	}
-	if err := svc.CreateRoleBind(&roleBind); err != nil {
-		logrus.Errorf("创建角色绑定: %s", err.Err)
-		util.Respf().Fail(xresponse.HttpInternalServerError).Response(util.GinRespf(c))
-		return
+	for _, roleBind := range roleBinds {
+		if err := svc.CreateRoleBind(&roleBind); err != nil {
+			logrus.Errorf("创建角色绑定: %s", err.Err)
+			util.Respf().FailWithError(err).Response(util.GinRespf(c))
+			return
+		}
 	}
 	util.Respf().Ok().Response(util.GinRespf(c))
 }
 
-func DeleteRoleBind(c *gin.Context) {
-	var roleBind model.RoleBind
-	if err := c.ShouldBindJSON(&roleBind); err != nil {
-		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
+func DeleteRoleBinds(c *gin.Context) {
+	var roleBinds []model.RoleBind
+	if err := c.ShouldBindJSON(&roleBinds); err != nil {
+		util.Respf().Fail(xresponse.HttpBadRequest).WithError(util.NewRespError(err)).Response(util.GinRespf(c))
 		return
 	}
-	if err := svc.DeleteRoleBind(&roleBind); err != nil {
-		logrus.Errorf("删除角色绑定: %s", err.Err)
-		util.Respf().Fail(xresponse.HttpInternalServerError).Response(util.GinRespf(c))
-		return
+	for _, roleBind := range roleBinds {
+		if err := svc.DeleteRoleBind(&roleBind); err != nil {
+			logrus.Errorf("删除角色绑定: %s", err.Err)
+			util.Respf().FailWithError(err).Response(util.GinRespf(c))
+			return
+		}
 	}
 	util.Respf().Ok().Response(util.GinRespf(c))
 }

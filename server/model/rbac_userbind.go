@@ -1,11 +1,11 @@
 package model
 
-type UserBind struct {
-	Id     int `json:"id"`
-	UserId int `json:"user_id" binding:"required"`
-	RoleId int `json:"role_id" binding:"required"`
-}
+import "time"
 
-func (UserBind) TableName() string {
-	return "wk_rbac_user_bind"
+type UserBind struct {
+	ID        int       `json:"id"`
+	UserID    int       `json:"user_id"`
+	RoleID    int       `json:"role_id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }

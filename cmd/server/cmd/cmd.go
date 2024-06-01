@@ -10,8 +10,7 @@ import (
 	"path"
 	"runtime"
 	"wukong/pkg/config"
-	"wukong/pkg/db"
-	"wukong/server/controller"
+	"wukong/pkg/configpost"
 )
 
 var cmdReady bool
@@ -84,26 +83,22 @@ func initConfig() error {
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		logrus.Fatal(err)
+		logrus.Fatalf("cmd error: %s", err.Error())
 	}
 	if cmdReady {
 		err := initConfig()
 		if err != nil {
-			logrus.Fatal(err)
+			logrus.Fatalf("config error: %s", err.Error())
+		}
+		err = xcrypto.DecryptCFBToStruct(&config.Conf.Secret, config.Conf.ConfigSecretKey)
+		if err != nil {
+			logrus.Fatalf("config secret decrypt error: %s", err.Error())
 		}
 		logrus.Debugf("config %+v", config.Conf)
-
 		initConfigPost()
 	}
 }
 
 func initConfigPost() {
-	err := xcrypto.DecryptCFBToStruct(&config.Conf.Secret, config.Conf.ConfigSecretKey)
-	if err != nil {
-		logrus.Fatal(err)
-	}
-
-	db.InitRedis()
-	db.InitMysql()
-	controller.RunServer(config.Conf.ServerBind)
+	configpost.PostInit()
 }

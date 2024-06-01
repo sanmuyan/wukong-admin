@@ -14,7 +14,7 @@ func GetResources(c *gin.Context) {
 	resources, err := svc.GetResources(getQuery(c, likeKeys, mustKeys))
 	if err != nil {
 		logrus.Errorf("获取API资源: %s", err.Err)
-		util.Respf().Fail(xresponse.HttpInternalServerError).Response(util.GinRespf(c))
+		util.Respf().FailWithError(err).Response(util.GinRespf(c))
 	}
 	util.Respf().Ok().WithData(resources).Response(util.GinRespf(c))
 }
@@ -22,12 +22,12 @@ func GetResources(c *gin.Context) {
 func CreateResource(c *gin.Context) {
 	var resource model.Resource
 	if err := c.ShouldBindJSON(&resource); err != nil {
-		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
+		util.Respf().Fail(xresponse.HttpBadRequest).WithError(util.NewRespError(err)).Response(util.GinRespf(c))
 		return
 	}
 	if err := svc.CreateResource(&resource); err != nil {
 		logrus.Errorf("创建API资源: %s", err.Err)
-		util.Respf().Fail(xresponse.HttpInternalServerError).Response(util.GinRespf(c))
+		util.Respf().Fail(xresponse.HttpBadRequest).WithError(err).Response(util.GinRespf(c))
 		return
 	}
 	util.Respf().Ok().Response(util.GinRespf(c))
@@ -36,12 +36,12 @@ func CreateResource(c *gin.Context) {
 func UpdateResource(c *gin.Context) {
 	var resource model.Resource
 	if err := c.ShouldBindJSON(&resource); err != nil {
-		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
+		util.Respf().Fail(xresponse.HttpBadRequest).WithError(util.NewRespError(err)).Response(util.GinRespf(c))
 		return
 	}
 	if err := svc.UpdateResource(&resource); err != nil {
 		logrus.Errorf("更新API资源: %s", err.Err)
-		util.Respf().Fail(xresponse.HttpInternalServerError).Response(util.GinRespf(c))
+		util.Respf().FailWithError(err).Response(util.GinRespf(c))
 		return
 	}
 	util.Respf().Ok().Response(util.GinRespf(c))
@@ -50,12 +50,12 @@ func UpdateResource(c *gin.Context) {
 func DeleteResource(c *gin.Context) {
 	var resource model.Resource
 	if err := c.ShouldBindJSON(&resource); err != nil {
-		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
+		util.Respf().Fail(xresponse.HttpBadRequest).WithError(util.NewRespError(err)).Response(util.GinRespf(c))
 		return
 	}
 	if err := svc.DeleteResource(&resource); err != nil {
 		logrus.Errorf("删除API资源: %s", err.Err)
-		util.Respf().Fail(xresponse.HttpInternalServerError).Response(util.GinRespf(c))
+		util.Respf().FailWithError(err).Response(util.GinRespf(c))
 		return
 	}
 	util.Respf().Ok().Response(util.GinRespf(c))

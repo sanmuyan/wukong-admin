@@ -76,16 +76,16 @@ server {
 
 先导入测试数据
 ```sql
-INSERT INTO `wukong`.`wk_rbac_resource`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/user', 1, '用户');
-INSERT INTO `wukong`.`wk_rbac_resource`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/user/profile', 2, '用户个人信息');
-INSERT INTO `wukong`.`wk_rbac_resource`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/logout', 2, '退出登录');
+INSERT INTO `wukong`.`resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/user', 1, '用户');
+INSERT INTO `wukong`.`resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/profile', -1, '用户个人信息');
+INSERT INTO `wukong`.`resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/logout', -1, '退出登录');
 
-INSERT INTO `wukong`.`wk_rbac_role`(`id`, `role_name`, `access_level`, `comment`) VALUES (1, 'base', 1, '基本用户');
-INSERT INTO `wukong`.`wk_rbac_role`(`id`, `role_name`, `access_level`, `comment`) VALUES (2, 'admin', 100, '管理员');
+INSERT INTO `wukong`.`roles`(`id`, `role_name`, `access_level`, `comment`) VALUES (1, 'base', 1, '基本用户');
+INSERT INTO `wukong`.`rbac_roles`(`id`, `role_name`, `access_level`, `comment`) VALUES (2, 'admin', 100, '管理员');
 
-INSERT INTO `wukong`.`wk_user`(`id`, `username`, `display_name`, `email`, `mobile`, `password`, `source`, `is_active`, `create_time`, `update_time`) VALUES (1, 'admin', '管理员', 'admin@qq.com', '13888888888', '$2a$04$WXVJ91k1yjGecUgfBgC3COnKstE.h4fdjV0bRc0TUpS4OoAAY0/7K', 'local', 1, '2023-04-14 16:44:07', '2023-04-15 13:17:28');
+INSERT INTO `wukong`.`users`(`id`, `username`, `display_name`, `email`, `mobile`, `password`, `source`, `is_active`) VALUES (1, 'admin', '管理员', 'admin@qq.com', '13888888888', '$2a$04$WXVJ91k1yjGecUgfBgC3COnKstE.h4fdjV0bRc0TUpS4OoAAY0/7K', 'local', 1);
 
 
-INSERT INTO `wukong`.`wk_rbac_user_bind`(`role_id`, `user_id`) VALUES (1, 1);
+INSERT INTO `wukong`.`user_binds`(`role_id`, `user_id`) VALUES (1, 1);
 ```
 http://localhost

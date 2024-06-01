@@ -20,3 +20,7 @@ func (r *ginResponse) SetFramework(c *xresponse.Response) {
 var GinRespf = func(c *gin.Context) *ginResponse {
 	return &ginResponse{Context: c}
 }
+
+type RespError *xresponse.Error
+
+var NewRespError = xresponse.NewError

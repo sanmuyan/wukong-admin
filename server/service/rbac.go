@@ -2,17 +2,16 @@ package service
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
+	"github.com/sanmuyan/xpkg/xutil"
 	"sort"
 	"strings"
-	"wukong/pkg/util"
+	"wukong/pkg/db"
 	"wukong/server/model"
 )
 
 func (s *Service) IsAuth(routePath string) bool {
 	var resource model.Resource
-	resource.ResourcePath = routePath
-	if err := dalf().Get(&resource); err != nil {
+	if err := db.DB.Where(&model.Resource{ResourcePath: routePath}).First(&resource).Error; err != nil {
 		return true
 	}
 	if resource.IsAuth != 1 {
@@ -21,56 +20,46 @@ func (s *Service) IsAuth(routePath string) bool {
 	return true
 }
 
-func (s *Service) GetRBAC(userId int) model.RBAC {
-	var rbac model.RBAC
-	var rbacResource model.RBACUserResource
-	func() (user model.User) {
-		user.Id = userId
-		_ = dalf().Get(&user)
-		if user.IsActive == 1 {
-			rbac.Active = true
-		}
-		return user
-	}()
-	if !rbac.Active {
-		logrus.Warning("用户已禁用")
-		return rbac
-	}
+func (s *Service) GetUserRoles(userId int) []model.Role {
+	var userRoles []model.Role
 	getUserBinds := func() (userBinds []model.UserBind) {
-		_ = dalf().Where(model.UserBind{UserId: userId}).List(&userBinds)
+		db.DB.Where(model.UserBind{UserID: userId}).Find(&userBinds)
 		return userBinds
 	}
-	getRoles := func(userBind model.UserBind) (role model.Role) {
-		role.Id = userBind.RoleId
-		_ = dalf().Get(&role)
+	getUserRole := func(userBind model.UserBind) (role model.Role) {
+		db.DB.First(&role, userBind.RoleID)
 		return role
 	}
-	getRoleBinds := func(userBind model.UserBind) (resourceBinds []model.RoleBind) {
-		_ = dalf().Where(model.RoleBind{RoleId: userBind.RoleId}).List(&resourceBinds)
-		return resourceBinds
-	}
-	getResource := func(resourceBind model.RoleBind) (resource model.Resource) {
-		resource.Id = resourceBind.ResourceId
-		_ = dalf().Get(&resource)
-		return resource
-	}
 	for _, userBind := range getUserBinds() {
-		rbac.Roles = append(rbac.Roles, getRoles(userBind))
-		for _, roleBind := range getRoleBinds(userBind) {
-			resource := getResource(roleBind)
-			rbacResource.ResourcePath = resource.ResourcePath
-			rbac.Resources = append(rbac.Resources, rbacResource)
-		}
+		userRoles = append(userRoles, getUserRole(userBind))
 	}
-	return rbac
+	return userRoles
 }
 
-func (s *Service) GetMaxAccessLevel(userId int) int {
+func (s *Service) GetUserResources(roles []model.Role) []model.Resource {
+	var resources []model.Resource
+	getRoleBinds := func(roleID int) (resourceBinds []model.RoleBind) {
+		db.DB.Where(model.RoleBind{RoleID: roleID}).Find(&resourceBinds)
+		return resourceBinds
+	}
+	getRoleResource := func(resourceBind model.RoleBind) (resource model.Resource) {
+		db.DB.First(&resource, resourceBind.ResourceID)
+		return resource
+	}
+	for _, role := range roles {
+		getRoleBinds(role.ID)
+		for _, resourceBind := range getRoleBinds(role.ID) {
+			resources = append(resources, getRoleResource(resourceBind))
+		}
+	}
+	return resources
+}
+
+func (s *Service) GetMaxAccessLevel(roles []model.Role) int {
 	// 一个用户可能绑定多个 role, 取等级最高的 role 生成 token
 	var accessLevels []int
 	var accessLevel int
-	rbac := s.GetRBAC(userId)
-	for _, role := range rbac.Roles {
+	for _, role := range roles {
 		accessLevel = role.AccessLevel
 		accessLevels = append(accessLevels, accessLevel)
 	}
@@ -81,12 +70,14 @@ func (s *Service) GetMaxAccessLevel(userId int) int {
 	return accessLevel
 }
 
-func (s *Service) IsAccessResource(token model.Token, c *gin.Context) bool {
-	userId := token.UserId
-	routePath := c.FullPath()
+func (s *Service) IsAccessResource(token *model.Token, c *gin.Context) bool {
 	var user model.User
-	user.Id = userId
-	if err := dalf().Get(&user); err != nil || user.IsActive != 1 {
+	if err := db.DB.Where(&model.User{Username: token.Username}).First(&user).Error; err != nil {
+		return false
+	}
+	token.SetUserID(user.ID)
+	routePath := c.FullPath()
+	if user.IsActive != 1 {
 		return false
 	}
 	// 判断是否为管理员, 管理员无需执行下面的流程
@@ -97,14 +88,21 @@ func (s *Service) IsAccessResource(token model.Token, c *gin.Context) bool {
 	if !s.IsAuth(c.FullPath()) {
 		return true
 	}
-	rbac := s.GetRBAC(userId)
-	for _, resource := range rbac.Resources {
+	resources := s.GetUserResources(s.GetUserRoles(token.GetUserID()))
+	for _, resource := range resources {
 		// 判断客户端请求的 resource 是否等于 role 列表中的 resource
 		// 支持父路径匹配 比如资源中有resourcePath=/api 客户端请求resourcePath=/api/user, 那么认为是有权限的
-		if strings.Compare(strings.ToLower(resource.ResourcePath), strings.ToLower(routePath)) == 0 {
+		rr := strings.ToLower(resource.ResourcePath)
+		rp := strings.ToLower(routePath)
+		// 前缀匹配
+		//if strings.HasPrefix(rp, rr) {
+		//	return true
+		//}
+		if rr == rp {
 			return true
 		}
-		if util.IsSubPath(strings.ToLower(resource.ResourcePath), strings.ToLower(routePath)) {
+		// 子路径匹配
+		if xutil.IsSubPath(rr, rp) {
 			return true
 		}
 	}

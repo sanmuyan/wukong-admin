@@ -1,34 +1,30 @@
 package service
 
 import (
+	"wukong/pkg/db"
+	"wukong/pkg/util"
 	"wukong/server/model"
 )
 
-func (s *Service) GetRoleBinds(query *model.Query) (*model.RoleBinds, *model.Error) {
+func (s *Service) GetRoleBinds(query *model.Query) (*model.RoleBinds, util.RespError) {
 	var roleBinds model.RoleBinds
-	opt := setQuery(query)
-	err := dalf().SetQuery(opt).Query(&roleBinds.RoleBinds)
+	err := queryData(query, &roleBinds)
 	if err != nil {
-		return nil, &model.Error{Err: err}
+		return nil, util.NewRespError(err)
 	}
-	roleBinds.Page = *opt.Page
 	return &roleBinds, nil
 }
 
-func (s *Service) CreateRoleBind(roleBind *model.RoleBind) *model.Error {
-	_ = dalf().Get(&roleBind)
-	if roleBind.Id != 0 {
-		return model.NewError("已存在该角色绑定", true)
-	}
-	if err := dalf().Create(&roleBind); err != nil {
-		return model.NewError(err.Error())
+func (s *Service) CreateRoleBind(roleBind *model.RoleBind) util.RespError {
+	if err := db.DB.Create(&roleBind).Error; err != nil {
+		return util.NewRespError(err)
 	}
 	return nil
 }
 
-func (s *Service) DeleteRoleBind(roleBind *model.RoleBind) *model.Error {
-	if err := dalf().Delete(&roleBind); err != nil {
-		return model.NewError(err.Error())
+func (s *Service) DeleteRoleBind(roleBind *model.RoleBind) util.RespError {
+	if err := db.DB.Delete(&model.RoleBind{}, roleBind.ID).Error; err != nil {
+		return util.NewRespError(err)
 	}
 	return nil
 }

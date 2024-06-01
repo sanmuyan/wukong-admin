@@ -1,9 +1,10 @@
 package controller
 
 import (
-	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"strconv"
+	"wukong/pkg/page"
 	"wukong/server/model"
 )
 
@@ -18,11 +19,13 @@ func getQuery(c *gin.Context, likeKeys string, mustKeys []string) *model.Query {
 	}
 
 	query := &model.Query{
-		PageNumber:     pageNumber,
-		PageSize:       pageSize,
 		QueryLikeValue: c.Query("query"),
 		QueryLikeKeys:  likeKeys,
 		QueryMustMap:   make(map[string]any),
+		Page: &page.Page{
+			PageNumber: pageNumber,
+			PageSize:   pageSize,
+		},
 	}
 
 	for _, key := range mustKeys {
@@ -34,8 +37,11 @@ func getQuery(c *gin.Context, likeKeys string, mustKeys []string) *model.Query {
 	return query
 }
 
-func keysToUserToken(keys map[string]any) (userToken *model.Token) {
-	keysJson, _ := json.Marshal(keys["userToken"])
-	_ = json.Unmarshal(keysJson, &userToken)
-	return userToken
+func keysToUserToken(c *gin.Context) (userToken *model.Token) {
+	_userToken, ok := c.Keys["userToken"]
+	if !ok {
+		logrus.Errorf("请求缺少键值 userToken keys: %+v", c.Keys)
+		return userToken
+	}
+	return _userToken.(*model.Token)
 }

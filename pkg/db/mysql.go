@@ -20,7 +20,7 @@ func InitMysql() {
 		Logger: logger.Default.LogMode(logLevel),
 	})
 	if err != nil {
-		logrus.Fatal(err)
+		logrus.Fatalf("connect mysql error: %s", err.Error())
 	}
 	sqlDB, _ := DB.DB()
 	sqlDB.SetMaxIdleConns(100)

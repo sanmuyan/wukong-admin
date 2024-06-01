@@ -1,37 +1,37 @@
 package service
 
 import (
-	model "wukong/server/model"
+	"wukong/pkg/db"
+	"wukong/pkg/util"
+	"wukong/server/model"
 )
 
-func (s *Service) GetRoles(query *model.Query) (*model.Roles, *model.Error) {
+func (s *Service) GetRoles(query *model.Query) (*model.Roles, util.RespError) {
 	var roles model.Roles
-	opt := setQuery(query)
-	err := dalf().SetQuery(opt).Query(&roles.Roles)
+	err := queryData(query, &roles)
 	if err != nil {
-		return nil, model.NewError(err.Error())
+		return nil, util.NewRespError(err)
 	}
-	roles.Page = *opt.Page
 	return &roles, nil
 }
 
-func (s *Service) CreateRole(role *model.Role) *model.Error {
-	if err := dalf().Create(&role); err != nil {
-		return model.NewError(err.Error())
+func (s *Service) CreateRole(role *model.Role) util.RespError {
+	if err := db.DB.Create(&role).Error; err != nil {
+		return util.NewRespError(err)
 	}
 	return nil
 }
 
-func (s *Service) UpdateRole(role *model.Role) *model.Error {
-	if err := dalf().Save(&role); err != nil {
-		return &model.Error{Err: err}
+func (s *Service) UpdateRole(role *model.Role) util.RespError {
+	if err := db.DB.Updates(&role).Error; err != nil {
+		return util.NewRespError(err)
 	}
 	return nil
 }
 
-func (s *Service) DeleteRole(role *model.Role) *model.Error {
-	if err := dalf().Delete(&role); err != nil {
-		return &model.Error{Err: err}
+func (s *Service) DeleteRole(role *model.Role) util.RespError {
+	if err := db.DB.Delete(&model.Role{}, role.ID).Error; err != nil {
+		return util.NewRespError(err)
 	}
 	return nil
 }

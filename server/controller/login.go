@@ -11,17 +11,13 @@ import (
 func Login(c *gin.Context) {
 	var login model.Login
 	if err := c.ShouldBindJSON(&login); err != nil {
-		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
+		util.Respf().Fail(xresponse.HttpBadRequest).WithError(util.NewRespError(err)).Response(util.GinRespf(c))
 		return
 	}
 	token, err := svc.Login(login)
 	if err != nil {
 		logrus.Errorf("用户登陆失败: %s", err.Err)
-		if err.IsResponseMsg {
-			util.Respf().Fail(xresponse.HttpUnauthorized).WithMsg(err.Err.Error()).Response(util.GinRespf(c))
-		} else {
-			util.Respf().Fail(xresponse.HttpInternalServerError).Response(util.GinRespf(c))
-		}
+		util.Respf().FailWithError(err).Response(util.GinRespf(c))
 		return
 	}
 	data := make(map[string]interface{})
@@ -30,9 +26,9 @@ func Login(c *gin.Context) {
 }
 
 func Logout(c *gin.Context) {
-	if err := svc.Logout(keysToUserToken(c.Keys)); err != nil {
+	if err := svc.Logout(keysToUserToken(c)); err != nil {
 		logrus.Errorf("用户登出失败: %s", err.Err)
-		util.Respf().Fail(xresponse.HttpInternalServerError).Response(util.GinRespf(c))
+		util.Respf().FailWithError(err).Response(util.GinRespf(c))
 		return
 	}
 	util.Respf().Ok().Response(util.GinRespf(c))

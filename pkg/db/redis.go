@@ -16,7 +16,7 @@ func InitRedis() {
 		PoolSize: 100,
 	})
 	if ok, err := RDB.Ping(ctx).Result(); ok != "PONG" && err != nil {
-		logrus.Fatalln(ok, err)
+		logrus.Fatalf("redis connect PING: %s error: %s", ok, err.Error())
 	}
 
 }

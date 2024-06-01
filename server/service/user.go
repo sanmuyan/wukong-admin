@@ -1,74 +1,63 @@
 package service
 
 import (
+	"errors"
 	"github.com/sanmuyan/xpkg/xbcrypt"
-	"time"
+	"github.com/sanmuyan/xpkg/xresponse"
+	"github.com/sanmuyan/xpkg/xutil"
+	"wukong/pkg/db"
 	"wukong/pkg/util"
 	"wukong/server/model"
 )
 
-func (s *Service) GetUsers(query *model.Query) (*model.Users, *model.Error) {
+func (s *Service) GetUsers(query *model.Query) (*model.Users, util.RespError) {
 	var users model.Users
-	opt := setQuery(query)
-	err := dalf().SetQuery(opt).Query(&users.Users)
+	err := queryData(query, &users)
 	if err != nil {
-		return nil, &model.Error{Err: err}
+		return nil, util.NewRespError(err)
 	}
-	users.Page = *opt.Page
 	for i := range users.Users {
 		users.Users[i].Password = ""
 	}
 	return &users, nil
 }
 
-func (s *Service) CreateUser(user *model.User) *model.Error {
-	nowTime := time.Now().Format("2006-01-02 15:04:05")
-	if !util.IsUserName(user.Username) {
-		return model.NewError("用户名不符合要求", true)
+func (s *Service) CreateUser(user *model.User) util.RespError {
+	if !xutil.IsUsername(user.Username) {
+		return util.NewRespError(errors.New("用户名不符合要求"), true).WithCode(xresponse.HttpBadRequest)
 	}
 	if !xbcrypt.IsPasswordComplexity(user.Password, 8, true, true, true, true) {
-		return model.NewError("密码不符合要求", true)
+		return util.NewRespError(errors.New("密码不符合要求"), true).WithCode(xresponse.HttpBadRequest)
 	}
-	_ = dalf().Get(&model.User{Username: user.Username})
-	if user.Id != 0 {
-		return model.NewError("用户名已存在", true)
+	tx := db.DB.Select("id").Where(&model.User{Username: user.Username}).First(&model.User{})
+	if tx.RowsAffected > 0 {
+		return util.NewRespError(errors.New("用户名已存在"), true).WithCode(xresponse.HttpBadRequest)
 	}
 	user.Source = "local"
 	user.IsActive = 1
-	user.UpdateTime = nowTime
-	user.CreateTime = nowTime
 	user.Password = xbcrypt.CreatePassword(user.Password)
-	if err := dalf().Create(&user); err != nil {
-		return model.NewError(err.Error())
+	if err := db.DB.Create(&user).Error; err != nil {
+		return util.NewRespError(err)
 	}
 	return nil
 }
 
-func (s *Service) UpdateUser(user *model.User) *model.Error {
-	nowTime := time.Now().Format("2006-01-02 15:04:05")
-	user.UpdateTime = nowTime
-	currentUser := &model.User{Id: user.Id}
-	if err := dalf().Get(currentUser); err != nil {
-		return model.NewError(err.Error())
-	}
+func (s *Service) UpdateUser(user *model.User) util.RespError {
 	if len(user.Password) > 0 {
 		if !xbcrypt.IsPasswordComplexity(user.Password, 8, true, true, true, true) {
-			return model.NewError("密码不符合要求", true)
+			return util.NewRespError(errors.New("密码不符合要求"), true).WithCode(xresponse.HttpBadRequest)
 		}
 		user.Password = xbcrypt.CreatePassword(user.Password)
-	} else {
-		user.Password = currentUser.Password
 	}
-	user.CreateTime = currentUser.CreateTime
-	if err := dalf().Save(&user); err != nil {
-		return model.NewError(err.Error())
+	if err := db.DB.Updates(&user).Error; err != nil {
+		return util.NewRespError(err)
 	}
 	return nil
 }
 
-func (s *Service) DeleteUser(user *model.User) *model.Error {
-	if err := dalf().Delete(&user); err != nil {
-		return model.NewError(err.Error())
+func (s *Service) DeleteUser(user *model.User) util.RespError {
+	if err := db.DB.Delete(&model.User{}, user.ID).Error; err != nil {
+		return util.NewRespError(err)
 	}
 	return nil
 }

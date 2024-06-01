@@ -1,37 +1,37 @@
 package service
 
 import (
+	"wukong/pkg/db"
+	"wukong/pkg/util"
 	"wukong/server/model"
 )
 
-func (s *Service) GetResources(query *model.Query) (*model.Resources, *model.Error) {
+func (s *Service) GetResources(query *model.Query) (*model.Resources, util.RespError) {
 	var resources model.Resources
-	opt := setQuery(query)
-	err := dalf().SetQuery(opt).Query(&resources.Resources)
+	err := queryData(query, &resources)
 	if err != nil {
-		return nil, model.NewError(err.Error())
+		return nil, util.NewRespError(err)
 	}
-	resources.Page = *opt.Page
 	return &resources, nil
 }
 
-func (s *Service) CreateResource(resource *model.Resource) *model.Error {
-	if err := dalf().Create(&resource); err != nil {
-		return &model.Error{Err: err}
+func (s *Service) CreateResource(resource *model.Resource) util.RespError {
+	if err := db.DB.Create(&resource).Error; err != nil {
+		return util.NewRespError(err)
 	}
 	return nil
 }
 
-func (s *Service) UpdateResource(resource *model.Resource) *model.Error {
-	if err := dalf().Save(&resource); err != nil {
-		return model.NewError(err.Error())
+func (s *Service) UpdateResource(resource *model.Resource) util.RespError {
+	if err := db.DB.Updates(&resource).Error; err != nil {
+		return util.NewRespError(err)
 	}
 	return nil
 }
 
-func (s *Service) DeleteResource(resource *model.Resource) *model.Error {
-	if err := dalf().Delete(&resource); err != nil {
-		return model.NewError(err.Error())
+func (s *Service) DeleteResource(resource *model.Resource) util.RespError {
+	if err := db.DB.Delete(&model.Resource{}, resource.ID).Error; err != nil {
+		return util.NewRespError(err)
 	}
 	return nil
 }

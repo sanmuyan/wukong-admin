@@ -1,12 +1,13 @@
 package model
 
-type Role struct {
-	Id          int    `json:"id"`
-	RoleName    string `json:"role_name"`
-	AccessLevel int    `json:"access_level"`
-	Comment     string `json:"comment"`
-}
+import "time"
 
-func (Role) TableName() string {
-	return "wk_rbac_role"
+type Role struct {
+	ID          int       `json:"id"`
+	RoleName    string    `json:"role_name"`
+	AccessLevel int       `json:"access_level"`
+	UserMenus   string    `json:"user_menus"`
+	Comment     string    `json:"comment"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }

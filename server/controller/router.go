@@ -26,8 +26,8 @@ func router(r *gin.Engine) {
 		apiGroup.PUT("/user", UpdateUser)
 		apiGroup.DELETE("/user", DeleteUser)
 
-		apiGroup.GET("/user/profile", GetUserProfile)
-		apiGroup.PUT("/user/profile", UpdateUserProfile)
+		apiGroup.GET("/profile", GetProfile)
+		apiGroup.PUT("/profile", UpdateProfile)
 
 		apiGroup.GET("/role", GetRoles)
 		apiGroup.POST("/role", CreateRole)
@@ -40,12 +40,17 @@ func router(r *gin.Engine) {
 		apiGroup.DELETE("/resource", DeleteResource)
 
 		apiGroup.GET("/roleBind", GetRoleBinds)
-		apiGroup.POST("/roleBind", CreateRoleBind)
-		apiGroup.DELETE("/roleBind", DeleteRoleBind)
+		apiGroup.POST("/roleBind", CreateRoleBinds)
+		apiGroup.DELETE("/roleBind", DeleteRoleBinds)
 
 		apiGroup.GET("/userBind", GetUserBinds)
-		apiGroup.POST("/userBind", CreateUserBind)
-		apiGroup.DELETE("/userBind", DeleteUserBind)
+		apiGroup.POST("/userBind", CreateUserBinds)
+		apiGroup.DELETE("/userBind", DeleteUserBinds)
+
+		apiGroup.POST("/token", CreateToken)
+		apiGroup.DELETE("/token", DeleteToken)
+
+		apiGroup.PUT("/ldap/user/sync", SyncLDAPUsers)
 	}
 	r.POST("/api/login", Login)
 }
