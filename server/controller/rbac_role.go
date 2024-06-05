@@ -3,6 +3,7 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/sanmuyan/xpkg/xresponse"
+	"github.com/sanmuyan/xpkg/xutil"
 	"github.com/sirupsen/logrus"
 	"wukong/pkg/util"
 	"wukong/server/model"
@@ -23,7 +24,7 @@ func GetRoles(c *gin.Context) {
 func CreateRole(c *gin.Context) {
 	var role model.Role
 	if err := c.ShouldBindJSON(&role); err != nil {
-		util.Respf().Fail(xresponse.HttpBadRequest).WithError(util.NewRespError(err)).Response(util.GinRespf(c))
+		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
 	if err := svc.CreateRole(&role); err != nil {
@@ -37,7 +38,7 @@ func CreateRole(c *gin.Context) {
 func UpdateRole(c *gin.Context) {
 	var role model.Role
 	if err := c.ShouldBindJSON(&role); err != nil {
-		util.Respf().Fail(xresponse.HttpBadRequest).WithError(util.NewRespError(err)).Response(util.GinRespf(c))
+		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
 	if err := svc.UpdateRole(&role); err != nil {
@@ -51,7 +52,11 @@ func UpdateRole(c *gin.Context) {
 func DeleteRole(c *gin.Context) {
 	var role model.Role
 	if err := c.ShouldBindJSON(&role); err != nil {
-		util.Respf().Fail(xresponse.HttpBadRequest).WithError(util.NewRespError(err)).Response(util.GinRespf(c))
+		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
+		return
+	}
+	if xutil.IsZero(role.ID) {
+		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
 	if err := svc.DeleteRole(&role); err != nil {

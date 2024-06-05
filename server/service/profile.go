@@ -42,7 +42,7 @@ func (s *Service) GetProfile(token *model.Token) (map[string]any, util.RespError
 			menuNames = append(menuNames, menu)
 		}
 	}
-	menuNames = xutil.ComparableDeduplication(menuNames)
+	menuNames = xutil.Deduplication(menuNames)
 	// 获取用户信息
 	db.DB.First(&user, userId)
 	userInfo := make(map[string]any)

@@ -11,7 +11,7 @@ import (
 func Login(c *gin.Context) {
 	var login model.Login
 	if err := c.ShouldBindJSON(&login); err != nil {
-		util.Respf().Fail(xresponse.HttpBadRequest).WithError(util.NewRespError(err)).Response(util.GinRespf(c))
+		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
 	token, err := svc.Login(login)

@@ -25,6 +25,17 @@ type LDAP struct {
 	SearchFilter      string       `mapstructure:"search_filter"`
 }
 
+type OAuth struct {
+	ClientID     string   `mapstructure:"client_id"`
+	ClientSecret string   `mapstructure:"client_secret"`
+	RedirectURL  string   `mapstructure:"redirect_url"`
+	AuthURL      string   `mapstructure:"auth_url"`
+	TokenURL     string   `mapstructure:"token_url"`
+	Scopes       []string `mapstructure:"scopes"`
+	UserInfoURL  string   `mapstructure:"user_info_url"`
+	Provider     string   `mapstructure:"provider"`
+}
+
 type Config struct {
 	Database                 Database `mapstructure:"database"`
 	TokenTTL                 int      `mapstructure:"token_ttl"`
@@ -35,6 +46,7 @@ type Config struct {
 	TokenClient              string   `mapstructure:"token_client"`
 	DisableVerifyServerToken bool     `mapstructure:"disable_verify_server_token"`
 	LDAP                     LDAP     `mapstructure:"ldap"`
+	OAuth                    OAuth    `mapstructure:"oauth"`
 }
 
 var Conf Config

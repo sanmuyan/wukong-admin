@@ -11,7 +11,7 @@ func RunServer(addr string) {
 	router(r)
 	err := r.Run(addr)
 	if err != nil {
-		logrus.Fatal(err)
+		logrus.Fatalf("server run error: %s", err)
 	}
 }
 
@@ -53,4 +53,6 @@ func router(r *gin.Engine) {
 		apiGroup.PUT("/ldap/user/sync", SyncLDAPUsers)
 	}
 	r.POST("/api/login", Login)
+	r.GET("/api/oauth/login", OAuthLogin)
+	r.GET("/api/oauth/callback", OAuthCallback)
 }

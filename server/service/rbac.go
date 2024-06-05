@@ -11,7 +11,7 @@ import (
 
 func (s *Service) IsAuth(routePath string) bool {
 	var resource model.Resource
-	if err := db.DB.Where(&model.Resource{ResourcePath: routePath}).First(&resource).Error; err != nil {
+	if err := db.DB.Select("is_auth").Where("resource_path = ?", routePath).First(&resource).Error; err != nil {
 		return true
 	}
 	if resource.IsAuth != 1 {
@@ -23,7 +23,7 @@ func (s *Service) IsAuth(routePath string) bool {
 func (s *Service) GetUserRoles(userId int) []model.Role {
 	var userRoles []model.Role
 	getUserBinds := func() (userBinds []model.UserBind) {
-		db.DB.Where(model.UserBind{UserID: userId}).Find(&userBinds)
+		db.DB.Where("user_id = ?", userId).Find(&userBinds)
 		return userBinds
 	}
 	getUserRole := func(userBind model.UserBind) (role model.Role) {
@@ -39,7 +39,7 @@ func (s *Service) GetUserRoles(userId int) []model.Role {
 func (s *Service) GetUserResources(roles []model.Role) []model.Resource {
 	var resources []model.Resource
 	getRoleBinds := func(roleID int) (resourceBinds []model.RoleBind) {
-		db.DB.Where(model.RoleBind{RoleID: roleID}).Find(&resourceBinds)
+		db.DB.Where("role_id = ?", roleID).Find(&resourceBinds)
 		return resourceBinds
 	}
 	getRoleResource := func(resourceBind model.RoleBind) (resource model.Resource) {

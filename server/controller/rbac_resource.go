@@ -3,6 +3,7 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/sanmuyan/xpkg/xresponse"
+	"github.com/sanmuyan/xpkg/xutil"
 	"github.com/sirupsen/logrus"
 	"wukong/pkg/util"
 	"wukong/server/model"
@@ -22,7 +23,11 @@ func GetResources(c *gin.Context) {
 func CreateResource(c *gin.Context) {
 	var resource model.Resource
 	if err := c.ShouldBindJSON(&resource); err != nil {
-		util.Respf().Fail(xresponse.HttpBadRequest).WithError(util.NewRespError(err)).Response(util.GinRespf(c))
+		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
+		return
+	}
+	if xutil.IsZero(resource.ResourcePath) {
+		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
 	if err := svc.CreateResource(&resource); err != nil {
@@ -36,7 +41,11 @@ func CreateResource(c *gin.Context) {
 func UpdateResource(c *gin.Context) {
 	var resource model.Resource
 	if err := c.ShouldBindJSON(&resource); err != nil {
-		util.Respf().Fail(xresponse.HttpBadRequest).WithError(util.NewRespError(err)).Response(util.GinRespf(c))
+		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
+		return
+	}
+	if xutil.IsZero(resource.ID) {
+		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
 	if err := svc.UpdateResource(&resource); err != nil {
@@ -50,7 +59,11 @@ func UpdateResource(c *gin.Context) {
 func DeleteResource(c *gin.Context) {
 	var resource model.Resource
 	if err := c.ShouldBindJSON(&resource); err != nil {
-		util.Respf().Fail(xresponse.HttpBadRequest).WithError(util.NewRespError(err)).Response(util.GinRespf(c))
+		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
+		return
+	}
+	if xutil.IsZero(resource.ID) {
+		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
 	if err := svc.DeleteResource(&resource); err != nil {

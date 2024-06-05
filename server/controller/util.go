@@ -45,3 +45,15 @@ func keysToUserToken(c *gin.Context) (userToken *model.Token) {
 	}
 	return _userToken.(*model.Token)
 }
+
+func IsMustQuery(c *gin.Context, params ...string) bool {
+	if len(params) == 0 {
+		return false
+	}
+	for _, param := range params {
+		if c.Query(param) == "" {
+			return false
+		}
+	}
+	return true
+}

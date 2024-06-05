@@ -6,10 +6,11 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-ldap/ldap/v3 v3.4.8
 	github.com/go-redis/redis/v8 v8.11.5
-	github.com/sanmuyan/xpkg v0.1.10
+	github.com/sanmuyan/xpkg v0.1.11
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.15.0
+	golang.org/x/oauth2 v0.20.0
 	gorm.io/driver/mysql v1.3.2
 	gorm.io/gorm v1.23.1
 )

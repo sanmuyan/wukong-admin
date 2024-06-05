@@ -3,6 +3,7 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/sanmuyan/xpkg/xresponse"
+	"github.com/sanmuyan/xpkg/xutil"
 	"github.com/sirupsen/logrus"
 	"wukong/pkg/util"
 	"wukong/server/model"
@@ -23,7 +24,11 @@ func GetUsers(c *gin.Context) {
 func CreateUser(c *gin.Context) {
 	var user model.User
 	if err := c.ShouldBindJSON(&user); err != nil {
-		util.Respf().Fail(xresponse.HttpBadRequest).WithError(util.NewRespError(err)).Response(util.GinRespf(c))
+		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
+		return
+	}
+	if xutil.IsZero(user.Username) {
+		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
 	if err := svc.CreateUser(&user); err != nil {
@@ -37,7 +42,11 @@ func CreateUser(c *gin.Context) {
 func UpdateUser(c *gin.Context) {
 	var user model.User
 	if err := c.ShouldBindJSON(&user); err != nil {
-		util.Respf().Fail(xresponse.HttpBadRequest).WithError(util.NewRespError(err)).Response(util.GinRespf(c))
+		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
+		return
+	}
+	if xutil.IsZero(user.ID) {
+		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
 	if err := svc.UpdateUser(&user); err != nil {
@@ -51,7 +60,11 @@ func UpdateUser(c *gin.Context) {
 func DeleteUser(c *gin.Context) {
 	var user model.User
 	if err := c.ShouldBindJSON(&user); err != nil {
-		util.Respf().Fail(xresponse.HttpBadRequest).WithError(util.NewRespError(err)).Response(util.GinRespf(c))
+		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
+		return
+	}
+	if xutil.IsZero(user.ID) {
+		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
 	if err := svc.DeleteUser(&user); err != nil {

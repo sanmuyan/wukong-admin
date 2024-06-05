@@ -3,6 +3,7 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/sanmuyan/xpkg/xresponse"
+	"github.com/sanmuyan/xpkg/xutil"
 	"github.com/sirupsen/logrus"
 	"wukong/pkg/util"
 	"wukong/server/model"
@@ -23,10 +24,14 @@ func GetUserBinds(c *gin.Context) {
 func CreateUserBinds(c *gin.Context) {
 	var userBinds []model.UserBind
 	if err := c.ShouldBindJSON(&userBinds); err != nil {
-		util.Respf().Fail(xresponse.HttpBadRequest).WithError(util.NewRespError(err)).Response(util.GinRespf(c))
+		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
 	for _, userBind := range userBinds {
+		if xutil.IsZero(userBind.UserID, userBind.RoleID) {
+			util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
+			return
+		}
 		if err := svc.CreateUserBind(&userBind); err != nil {
 			logrus.Errorf("创建用户角色绑定: %s", err.Err)
 			util.Respf().FailWithError(err).Response(util.GinRespf(c))
@@ -39,10 +44,14 @@ func CreateUserBinds(c *gin.Context) {
 func DeleteUserBinds(c *gin.Context) {
 	var userBinds []model.UserBind
 	if err := c.ShouldBindJSON(&userBinds); err != nil {
-		util.Respf().Fail(xresponse.HttpBadRequest).WithError(util.NewRespError(err)).Response(util.GinRespf(c))
+		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
 	for _, userBind := range userBinds {
+		if xutil.IsZero(userBind.ID) {
+			util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
+			return
+		}
 		if err := svc.DeleteUserBind(&userBind); err != nil {
 			logrus.Errorf("删除用户角色绑定: %s", err.Err)
 			util.Respf().FailWithError(err).Response(util.GinRespf(c))
