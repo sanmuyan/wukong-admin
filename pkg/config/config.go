@@ -6,7 +6,7 @@ type Database struct {
 }
 
 type Secret struct {
-	TokenKey string `mapstructure:"token_key"`
+	TokenID string `mapstructure:"token_key"`
 }
 
 type AttributeMap struct {
@@ -25,7 +25,7 @@ type LDAP struct {
 	SearchFilter      string       `mapstructure:"search_filter"`
 }
 
-type OAuth struct {
+type Oauth struct {
 	ClientID     string   `mapstructure:"client_id"`
 	ClientSecret string   `mapstructure:"client_secret"`
 	RedirectURL  string   `mapstructure:"redirect_url"`
@@ -43,10 +43,10 @@ type Config struct {
 	LogLevel                 int      `mapstructure:"log_level"`
 	ServerBind               string   `mapstructure:"server_bind"`
 	ConfigSecretKey          string   `mapstructure:"config_secret_key"`
-	TokenClient              string   `mapstructure:"token_client"`
+	DataStorage              string   `mapstructure:"data_storage"`
 	DisableVerifyServerToken bool     `mapstructure:"disable_verify_server_token"`
 	LDAP                     LDAP     `mapstructure:"ldap"`
-	OAuth                    OAuth    `mapstructure:"oauth"`
+	Oauth                    Oauth    `mapstructure:"oauth"`
 }
 
 var Conf Config

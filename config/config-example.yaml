@@ -7,8 +7,8 @@ secret:
 log_level: 4
 # token 过期时间
 token_ttl: 86400
-# token 存储数据库类型
-token_client: redis
+# 临时数据存储数据库类型
+data_storage: mysql
 # 是否禁用验证服务端 token 是否有效
 disable_verify_server_token: false
 # ldap 配置

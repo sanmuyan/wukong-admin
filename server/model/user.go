@@ -12,12 +12,12 @@ type Login struct {
 type User struct {
 	ID          int       `json:"id"`
 	Username    string    `json:"username" gorm:"<-:create"`
-	DisplayName string    `json:"display_name"`
-	Password    string    `json:"password"`
-	Mobile      string    `json:"mobile"`
-	Email       string    `json:"email"`
-	Source      string    `json:"source"`
+	DisplayName string    `json:"display_name,omitempty"`
+	Password    string    `json:"password,omitempty"`
+	Mobile      string    `json:"mobile,omitempty"`
+	Email       string    `json:"email,omitempty"`
+	Source      string    `json:"source,omitempty"`
 	IsActive    int       `json:"is_active"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	CreatedAt   time.Time `json:"created_at,omitempty" gorm:"<-:create"`
+	UpdatedAt   time.Time `json:"updated_at,omitempty"`
 }

@@ -1,11 +1,11 @@
 package service
 
 import (
-	"encoding/json"
 	"errors"
 	"github.com/sanmuyan/xpkg/xbcrypt"
 	"github.com/sanmuyan/xpkg/xresponse"
 	"github.com/sanmuyan/xpkg/xutil"
+	"strings"
 	"wukong/pkg/db"
 	"wukong/pkg/util"
 	"wukong/server/model"
@@ -36,11 +36,8 @@ func (s *Service) GetProfile(token *model.Token) (map[string]any, util.RespError
 	maxRoleLevel := getMaxAccessLevel(roles)
 	for _, role := range roles {
 		roleComments = append(roleComments, role.Comment)
-		var roleMenus []string
-		_ = json.Unmarshal([]byte(role.UserMenus), &roleMenus)
-		for _, menu := range roleMenus {
-			menuNames = append(menuNames, menu)
-		}
+		roleMenus := strings.Split(role.UserMenus, ",")
+		menuNames = append(menuNames, roleMenus...)
 	}
 	menuNames = xutil.Deduplication(menuNames)
 	// 获取用户信息

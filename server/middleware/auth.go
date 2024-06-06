@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 	"wukong/pkg/config"
-	"wukong/pkg/tokenclient"
+	"wukong/pkg/datastorage"
 	"wukong/pkg/util"
 	"wukong/server/model"
 	"wukong/server/service"
@@ -30,7 +30,7 @@ func AccessControl() gin.HandlerFunc {
 			if reqToken == "" {
 				return util.NewRespError(errors.New("未携带令牌"))
 			}
-			_, err := xjwt.ParseToken(reqToken, config.Conf.Secret.TokenKey, &token)
+			_, err := xjwt.ParseToken(reqToken, config.Conf.Secret.TokenID, &token)
 			if err != nil {
 				return util.NewRespError(err)
 			}
@@ -39,7 +39,7 @@ func AccessControl() gin.HandlerFunc {
 					return util.NewRespError(errors.New("令牌已过期"))
 				}
 			}
-			if !config.Conf.DisableVerifyServerToken && !tokenclient.TC.IsTokenExist(token.Username, token.TokenType, reqToken) {
+			if !config.Conf.DisableVerifyServerToken && !datastorage.DS.IsTokenExist(token.Username, token.TokenType, reqToken) {
 				return util.NewRespError(errors.New("服务器令牌已过期"))
 			}
 			if !svc.IsAccessResource(&token, c) {

@@ -81,3 +81,16 @@ func (r *Resources) GetData() any {
 func (r *Resources) GetPage() *page.Page {
 	return &r.Page
 }
+
+type OauthAPPS struct {
+	OauthAPPS []OauthAPP `json:"oauth_apps"`
+	page.Page
+}
+
+func (r *OauthAPPS) GetData() any {
+	return &r.OauthAPPS
+}
+
+func (r *OauthAPPS) GetPage() *page.Page {
+	return &r.Page
+}

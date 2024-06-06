@@ -1,4 +1,4 @@
-package useroauth
+package oauthlogin
 
 import (
 	"encoding/json"
@@ -14,7 +14,7 @@ func NewGitlabUser() *GitlabUser {
 	return &GitlabUser{}
 }
 
-func (c *GitlabUser) GetUserInfo(userRaw []byte) (OAuthProvider, error) {
+func (c *GitlabUser) GetUserInfo(userRaw []byte) (OauthProvider, error) {
 	user := &GitlabUser{}
 	err := json.Unmarshal(userRaw, user)
 	if err != nil {

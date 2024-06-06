@@ -2,9 +2,9 @@ package configpost
 
 import (
 	"wukong/pkg/config"
+	"wukong/pkg/datastorage"
 	"wukong/pkg/db"
-	"wukong/pkg/tokenclient"
-	"wukong/pkg/userauth"
+	"wukong/pkg/usersource"
 	"wukong/server/controller"
 )
 
@@ -13,7 +13,7 @@ func PostInit() {
 		db.InitRedis()
 	}
 	db.InitMysql()
-	tokenclient.InitTokenClient()
-	userauth.InitUserAuth()
+	datastorage.InitTokenStorage()
+	usersource.InitUserSource()
 	controller.RunServer(config.Conf.ServerBind)
 }

@@ -1,4 +1,4 @@
-package userauth
+package usersource
 
 import (
 	"fmt"
@@ -6,21 +6,21 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type LDAPAuth struct {
+type LDAPUser struct {
 	url string
 	sd  string
 	cn  string
 }
 
-func NewLDAPAuth(url string, searchBase string, cnAttribute string) *LDAPAuth {
-	return &LDAPAuth{
+func NewLDAPUser(url string, searchBase string, cnAttribute string) *LDAPUser {
+	return &LDAPUser{
 		url: url,
 		sd:  searchBase,
 		cn:  cnAttribute,
 	}
 }
 
-func (c *LDAPAuth) Login(username string, password string) bool {
+func (c *LDAPUser) Login(username string, password string) bool {
 	l, err := ldap.DialURL(c.url)
 	if err != nil {
 		logrus.Errorf("failed to dial: %s", err)

@@ -46,7 +46,7 @@ func keysToUserToken(c *gin.Context) (userToken *model.Token) {
 	return _userToken.(*model.Token)
 }
 
-func IsMustQuery(c *gin.Context, params ...string) bool {
+func isMustQuery(c *gin.Context, params ...string) bool {
 	if len(params) == 0 {
 		return false
 	}

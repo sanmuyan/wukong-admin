@@ -4,8 +4,9 @@ import (
 	"errors"
 	"github.com/sanmuyan/xpkg/xresponse"
 	"github.com/sirupsen/logrus"
+	"wukong/pkg/config"
 	"wukong/pkg/db"
-	"wukong/pkg/userauth"
+	"wukong/pkg/usersource"
 	"wukong/pkg/util"
 	"wukong/server/model"
 )
@@ -21,11 +22,11 @@ func (s *Service) Login(login model.Login) (string, util.RespError) {
 		return "", util.NewRespError(errors.New("用户名或密码错误"), true).WithCode(xresponse.HttpUnauthorized)
 	}
 
-	as, ok := userauth.AuthSources[user.Source]
+	us, ok := usersource.UserSources[user.Source]
 	if !ok {
 		return "", util.NewRespError(errors.New("未知的用户来源"), false)
 	}
-	if !as.Login(login.Username, login.Password) {
+	if !us.Login(login.Username, login.Password) {
 		return "", util.NewRespError(errors.New("用户名或密码错误"), true).WithCode(xresponse.HttpUnauthorized)
 	}
 
@@ -34,7 +35,7 @@ func (s *Service) Login(login model.Login) (string, util.RespError) {
 		AccessLevel: s.GetMaxAccessLevel(s.GetUserRoles(user.ID)),
 		TokenType:   model.SessionToken,
 	}
-	tokenStr, err := s.CreateOrSetToken(&token)
+	tokenStr, err := s.CreateOrSetToken(&token, token.Username, config.Conf.TokenTTL)
 	if err != nil {
 		return "", util.NewRespError(err)
 	}

@@ -80,13 +80,36 @@ func (s *Service) IsAccessResource(token *model.Token, c *gin.Context) bool {
 	if user.IsActive != 1 {
 		return false
 	}
+
+	// 处理 Oauth refreshToken
+	if token.TokenType == model.OauthRefreshToken {
+		if routePath == "/api/oauth/token" {
+			return true
+		}
+		return false
+	}
+
 	// 判断是否为管理员, 管理员无需执行下面的流程
 	if token.AccessLevel >= 100 {
 		return true
 	}
 	// 判断该资源路径是否需要鉴权
 	if !s.IsAuth(c.FullPath()) {
+		// 处理 OAuth accessToken 访问 profile
+		if token.TokenType == model.OauthAccessToken {
+			scope := strings.Split(token.Scope, ",")
+			if !xutil.IsContains("profile", scope) {
+				return false
+			}
+		}
 		return true
+	}
+	// 处理 OAuth accessToken 访问 API
+	if token.TokenType == model.OauthAccessToken {
+		scope := strings.Split(token.Scope, ",")
+		if !xutil.IsContains("api", scope) {
+			return false
+		}
 	}
 	resources := s.GetUserResources(s.GetUserRoles(token.GetUserID()))
 	for _, resource := range resources {

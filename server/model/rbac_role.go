@@ -8,6 +8,6 @@ type Role struct {
 	AccessLevel int       `json:"access_level"`
 	UserMenus   string    `json:"user_menus"`
 	Comment     string    `json:"comment"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	CreatedAt   time.Time `json:"created_at,omitempty" gorm:"<-:create"`
+	UpdatedAt   time.Time `json:"updated_at,omitempty"`
 }

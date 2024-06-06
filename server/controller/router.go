@@ -51,8 +51,19 @@ func router(r *gin.Engine) {
 		apiGroup.DELETE("/token", DeleteToken)
 
 		apiGroup.PUT("/ldap/user/sync", SyncLDAPUsers)
+
+		apiGroup.GET("/oauth/authorize", GetOauthCode)
+
+		apiGroup.GET("/oauth/app", GetOauthAPPS)
+		apiGroup.POST("/oauth/app", CreateOauthAPP)
+		apiGroup.PUT("/oauth/app", UpdateOauthAPP)
+		apiGroup.DELETE("/oauth/app", DeleteOauthAPP)
+
 	}
 	r.POST("/api/login", Login)
-	r.GET("/api/oauth/login", OAuthLogin)
-	r.GET("/api/oauth/callback", OAuthCallback)
+	r.GET("/api/oauth/login", OauthLogin)
+	r.GET("/api/oauth/callback", OauthCallback)
+	r.GET("/api/oauth/token", GetOauthToken)
+	r.POST("/api/oauth/token", RefreshOauthToken)
+	r.POST("/api/oauth/revoke", RevokeOauthToken)
 }
