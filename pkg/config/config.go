@@ -25,7 +25,7 @@ type LDAP struct {
 	SearchFilter      string       `mapstructure:"search_filter"`
 }
 
-type Oauth struct {
+type OauthProvider struct {
 	ClientID     string   `mapstructure:"client_id"`
 	ClientSecret string   `mapstructure:"client_secret"`
 	RedirectURL  string   `mapstructure:"redirect_url"`
@@ -36,17 +36,24 @@ type Oauth struct {
 	Provider     string   `mapstructure:"provider"`
 }
 
+type APP struct {
+	OauthLoginRedirectURL string `mapstructure:"oauth_login_redirect_url"`
+}
+
 type Config struct {
-	Database                 Database `mapstructure:"database"`
-	TokenTTL                 int      `mapstructure:"token_ttl"`
-	Secret                   Secret   `mapstructure:"secret" `
-	LogLevel                 int      `mapstructure:"log_level"`
-	ServerBind               string   `mapstructure:"server_bind"`
-	ConfigSecretKey          string   `mapstructure:"config_secret_key"`
-	DataStorage              string   `mapstructure:"data_storage"`
-	DisableVerifyServerToken bool     `mapstructure:"disable_verify_server_token"`
-	LDAP                     LDAP     `mapstructure:"ldap"`
-	Oauth                    Oauth    `mapstructure:"oauth"`
+	Database                 Database        `mapstructure:"database"`
+	TokenTTL                 int             `mapstructure:"token_ttl"`
+	Secret                   Secret          `mapstructure:"secret" `
+	LogLevel                 int             `mapstructure:"log_level"`
+	ServerBind               string          `mapstructure:"server_bind"`
+	ConfigSecretKey          string          `mapstructure:"config_secret_key"`
+	DataStorage              string          `mapstructure:"data_storage"`
+	DisableVerifyServerToken bool            `mapstructure:"disable_verify_server_token"`
+	LDAP                     LDAP            `mapstructure:"ldap"`
+	OauthProviders           []OauthProvider `mapstructure:"oauth_providers"`
+	APP                      APP             `mapstructure:"app"`
 }
 
 var Conf Config
+
+var OauthProviders = make(map[string]OauthProvider)

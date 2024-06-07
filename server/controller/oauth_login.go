@@ -12,8 +12,14 @@ func OauthLogin(c *gin.Context) {
 		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
+	authURL, err := svc.OauthLogin(c.Query("provider"))
+	if err != nil {
+		logrus.Errorf("OAuth 登录失败: %s", err.Err)
+		util.Respf().FailWithError(err).Response(util.GinRespf(c))
+		return
+	}
 	data := make(map[string]interface{})
-	data["auth_url"] = svc.OauthLogin(c.Query("provider"))
+	data["auth_url"] = authURL
 	util.Respf().Ok().WithData(data).Response(util.GinRespf(c))
 }
 

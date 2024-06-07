@@ -15,12 +15,20 @@ import (
 	"wukong/server/model"
 )
 
-func (s *Service) OauthLogin(provider string) string {
-	return s.getOauthConfig().AuthCodeURL(provider)
+func (s *Service) OauthLogin(provider string) (string, util.RespError) {
+	providerConf, ok := config.OauthProviders[provider]
+	if !ok {
+		return "", util.NewRespError(errors.New("provider not found"))
+	}
+	return s.getOauthConfig(providerConf).AuthCodeURL(provider), nil
 }
 
 func (s *Service) OauthCallback(code string, state string) (string, util.RespError) {
-	oauthUser, err := s.getOauthUser(s.getOauthConfig(), code, state)
+	providerConf, ok := config.OauthProviders[state]
+	if !ok {
+		return "", util.NewRespError(errors.New("provider not found"))
+	}
+	oauthUser, err := s.getOauthUser(s.getOauthConfig(providerConf), code, state, providerConf.UserInfoURL)
 	if err != nil {
 		return "", util.NewRespError(err).WithCode(xresponse.HttpUnauthorized)
 	}
@@ -57,14 +65,14 @@ func (s *Service) OauthCallback(code string, state string) (string, util.RespErr
 	return tokenStr, nil
 }
 
-func (s *Service) getOauthUser(conf *oauth2.Config, code string, state string) (useroauth.OauthProvider, error) {
+func (s *Service) getOauthUser(conf *oauth2.Config, code string, state string, userInfoURL string) (useroauth.OauthProvider, error) {
 	token, err := conf.Exchange(context.Background(), code)
 	if err != nil {
 		return nil, err
 	}
 	logrus.Debugf("Oauth token: %+v", token)
 	client := conf.Client(context.Background(), token)
-	resp, err := client.Get(config.Conf.Oauth.UserInfoURL)
+	resp, err := client.Get(userInfoURL)
 	if err != nil {
 		return nil, err
 	}
@@ -85,15 +93,15 @@ func (s *Service) getOauthUser(conf *oauth2.Config, code string, state string) (
 	return op.GetUserInfo(body)
 }
 
-func (s *Service) getOauthConfig() *oauth2.Config {
+func (s *Service) getOauthConfig(providerConf config.OauthProvider) *oauth2.Config {
 	return &oauth2.Config{
-		ClientID:     config.Conf.Oauth.ClientID,
-		ClientSecret: config.Conf.Oauth.ClientSecret,
+		ClientID:     providerConf.ClientID,
+		ClientSecret: providerConf.ClientSecret,
 		Endpoint: oauth2.Endpoint{
-			AuthURL:  config.Conf.Oauth.AuthURL,
-			TokenURL: config.Conf.Oauth.TokenURL,
+			AuthURL:  providerConf.AuthURL,
+			TokenURL: providerConf.TokenURL,
 		},
-		RedirectURL: config.Conf.Oauth.RedirectURL,
-		Scopes:      config.Conf.Oauth.Scopes,
+		RedirectURL: providerConf.RedirectURL,
+		Scopes:      providerConf.Scopes,
 	}
 }

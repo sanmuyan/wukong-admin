@@ -12,6 +12,9 @@ func PostInit() {
 	if config.Conf.Database.Redis != "" {
 		db.InitRedis()
 	}
+	for _, oauthProvider := range config.Conf.OauthProviders {
+		config.OauthProviders[oauthProvider.Provider] = oauthProvider
+	}
 	db.InitMysql()
 	datastorage.InitTokenStorage()
 	usersource.InitUserSource()

@@ -52,7 +52,7 @@ func router(r *gin.Engine) {
 
 		apiGroup.PUT("/ldap/user/sync", SyncLDAPUsers)
 
-		apiGroup.GET("/oauth/authorize", GetOauthCode)
+		apiGroup.GET("/oauth/authorize/frontRedirect", GetOauthCodeFrontRedirect)
 
 		apiGroup.GET("/oauth/app", GetOauthAPPS)
 		apiGroup.POST("/oauth/app", CreateOauthAPP)
@@ -63,7 +63,7 @@ func router(r *gin.Engine) {
 	r.POST("/api/login", Login)
 	r.GET("/api/oauth/login", OauthLogin)
 	r.GET("/api/oauth/callback", OauthCallback)
-	r.GET("/api/oauth/token", GetOauthToken)
-	r.POST("/api/oauth/token", RefreshOauthToken)
+	r.POST("/api/oauth/token", GetOauthToken)
 	r.POST("/api/oauth/revoke", RevokeOauthToken)
+	r.GET("/api/oauth/authorize", GetOauthCode)
 }

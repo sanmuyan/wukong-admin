@@ -15,23 +15,3 @@ type OauthAPP struct {
 	CreatedAt    time.Time `json:"created_at,omitempty" gorm:"<-:create"`
 	UpdatedAt    time.Time `json:"updated_at,omitempty"`
 }
-
-type OauthCode struct {
-	ID           int
-	Code         string
-	Username     string
-	ClientID     string
-	ClientSecret string
-	RedirectURI  string
-	Scope        string
-	ExpiresAt    time.Time
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-}
-
-type OauthTokenResponse struct {
-	AccessToken  string `json:"access_token"`
-	ExpiresIn    int    `json:"expires_in"`
-	RefreshToken string `json:"refresh_token,omitempty"`
-	TokenType    string `json:"token_type"`
-}

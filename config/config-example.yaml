@@ -24,13 +24,16 @@ ldap:
   admin_dn: cn=admin,dc=example,dc=com
   admin_password: 123456
 # oauth 登录配置
-oauth:
-  client_id:
-  client_secret:
-  redirect_url:
-  token_url:
-  auth_url:
-  user_info_url:
-  scopes:
-    - read_user
-  provider: gitlab
+oauth_providers:
+  - provider: gitlab
+    client_id:
+    client_secret:
+    redirect_url:
+    token_url:
+    auth_url:
+    user_info_url:
+    scopes:
+      - read_user
+app:
+  # 通过应用登录时未登录时跳转 URL
+  oauth_login_redirect_url: http://localhost/login?callback=

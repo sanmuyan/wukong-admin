@@ -1,78 +1,87 @@
 package controller
 
 import (
+	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/sanmuyan/xpkg/xresponse"
-	"github.com/sirupsen/logrus"
+	"wukong/pkg/config"
+	"wukong/pkg/tokenutil"
 	"wukong/pkg/util"
+	"wukong/server/model"
 )
 
-func GetOauthCode(c *gin.Context) {
-	if !isMustQuery(c, "client_id", "redirect_uri", "response_type") {
-		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
+func GetOauthCodeFrontRedirect(c *gin.Context) {
+	var req model.OauthCodeRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		util.Respf().FailWithError(util.NewRespError(errors.New("invalid_request"), true), xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
-	redirectURI, err := svc.GetOauthCode(
-		keysToUserToken(c),
-		c.Query("client_id"),
-		c.Query("redirect_uri"),
-		c.Query("response_type"),
-		c.Query("scope"),
-		c.Query("state"))
-	if err != nil {
-		logrus.Errorf("获取 OAuth code: %s", err.Err)
-		util.Respf().FailWithError(err).Response(util.GinRespf(c))
+	redirectURI, _err := svc.GetOauthCode(keysToUserToken(c), &req)
+	if _err != nil {
+		util.Respf().FailWithError(util.NewRespError(errors.New(_err.Error), true), xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
-	data := make(map[string]string)
+	data := make(map[string]interface{})
 	data["redirect_uri"] = redirectURI
 	util.Respf().Ok().WithData(data).Response(util.GinRespf(c))
 }
 
-func GetOauthToken(c *gin.Context) {
-	if !isMustQuery(c, "code", "client_id", "redirect_uri", "grant_type") {
-		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
+func GetOauthCode(c *gin.Context) {
+	var req model.OauthCodeRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		c.JSON(200, model.NewOauthErrorResponse("invalid_request"))
 		return
 	}
-	token, err := svc.GetOauthToken(
-		c.Query("code"),
-		c.Query("client_id"),
-		c.Query("client_secret"),
-		c.Query("redirect_uri"),
-		c.Query("grant_type"),
-	)
+	token, err := tokenutil.ValidToken(tokenutil.ParseCookie(c))
 	if err != nil {
-		logrus.Errorf("获取 OAuth token: %s", err.Err)
-		util.Respf().FailWithError(err).Response(util.GinRespf(c))
+		c.Redirect(302, fmt.Sprintf("%s%s", config.Conf.APP.OauthLoginRedirectURL, c.Request.URL.String()))
 		return
 	}
-	c.JSON(200, token)
+	redirectURI, _err := svc.GetOauthCode(&token, &req)
+	if _err != nil {
+		c.JSON(200, _err)
+		return
+	}
+	c.Redirect(302, redirectURI)
 }
 
-func RefreshOauthToken(c *gin.Context) {
-	if !isMustQuery(c, "client_id", "refresh_token", "grant_type") {
-		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
+func GetOauthToken(c *gin.Context) {
+	var req model.OauthTokenRequest
+	if err := c.ShouldBind(&req); err != nil {
+		c.JSON(200, model.NewOauthErrorResponse("invalid_request"))
 		return
 	}
-	token, err := svc.RefreshOauthToken(c.Query("refresh_token"), c.Query("client_id"), c.Query("grant_type"), c.Query("client_secret"))
-	if err != nil {
-		logrus.Errorf("刷新 OAuth token: %s", err.Err)
-		util.Respf().FailWithError(err).Response(util.GinRespf(c))
-		return
+	switch req.GrantType {
+	case "authorization_code":
+		token, err := svc.GetOauthToken(&req)
+		if err != nil {
+			c.JSON(200, err)
+			return
+		}
+		c.JSON(200, token)
+	case "refresh_token":
+		token, err := svc.RefreshOauthToken(&req)
+		if err != nil {
+			c.JSON(200, err)
+			return
+		}
+		c.JSON(200, token)
+	default:
+		c.JSON(200, model.NewOauthErrorResponse("invalid_grant_type"))
 	}
-	c.JSON(200, token)
 }
 
 func RevokeOauthToken(c *gin.Context) {
-	if !isMustQuery(c, "client_id", "token") {
-		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
+	var req model.OauthRevokeTokenRequest
+	if err := c.ShouldBind(&req); err != nil {
+		c.JSON(200, model.NewOauthErrorResponse("invalid_request"))
 		return
 	}
-	err := svc.RevokeOauthToken(c.Query("token"), c.Query("client_id"), c.Query("client_secret"))
+	err := svc.RevokeOauthToken(&req)
 	if err != nil {
-		logrus.Errorf("删除 Oauth token: %s", err.Err)
-		util.Respf().FailWithError(err).Response(util.GinRespf(c))
+		c.JSON(200, err)
 		return
 	}
-	util.Respf().Ok().Response(util.GinRespf(c))
+	c.JSON(200, `{}`)
 }

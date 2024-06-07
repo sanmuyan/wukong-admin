@@ -1,18 +1,15 @@
 package service
 
 import (
-	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/sanmuyan/xpkg/xjwt"
-	"github.com/sanmuyan/xpkg/xresponse"
 	"github.com/sanmuyan/xpkg/xutil"
 	"strings"
 	"time"
 	"wukong/pkg/config"
 	"wukong/pkg/datastorage"
 	"wukong/pkg/db"
-	"wukong/pkg/util"
 	"wukong/server/model"
 )
 
@@ -20,74 +17,99 @@ const (
 	accessTokenExpiration = 3600
 )
 
-func (s *Service) GetOauthCode(token *model.Token, clientID, redirectURI, responseType, scope, state string) (string, util.RespError) {
-	var code string
+func (s *Service) GetOauthRedirectURI(req *model.OauthCodeRequest) (string, *model.OauthErrorResponse) {
 	var oauthAPP model.OauthAPP
-	if responseType != "code" {
-		return code, util.NewRespError(errors.New("不支持的 response_type")).WithCode(xresponse.HttpBadRequest)
+	if req.ResponseType != "code" {
+		return "", model.NewOauthErrorResponse("unsupported_response_type")
 	}
-	tx := db.DB.Where("client_id = ?", clientID).First(&oauthAPP)
+	tx := db.DB.Where("client_id = ?", req.ClientID).First(&oauthAPP)
 	if tx.RowsAffected == 0 {
-		return code, util.NewRespError(errors.New("应用不存在")).WithCode(xresponse.HttpBadRequest)
+		return "", model.NewOauthErrorResponse("invalid_client_id")
 	}
-	if !xutil.IsContains(redirectURI, strings.Split(oauthAPP.RedirectURI, ",")) {
-		return code, util.NewRespError(errors.New("回调地址不正确")).WithCode(xresponse.HttpBadRequest)
+	if !xutil.IsContains(req.RedirectURI, strings.Split(oauthAPP.RedirectURI, ",")) {
+		return "", model.NewOauthErrorResponse("invalid_redirect_uri")
 	}
 	appScopes := strings.Split(oauthAPP.Scope, ",")
-	scopes := strings.Split(scope, " ")
+	scopes := strings.Split(req.Scope, " ")
 	for _, _scope := range scopes {
 		if !xutil.IsContains(_scope, appScopes) {
-			return code, util.NewRespError(errors.New("不支持的 scope")).WithCode(xresponse.HttpBadRequest)
+			return "", model.NewOauthErrorResponse("invalid_scope")
+		}
+	}
+	if req.State != "" {
+		return fmt.Sprintf("%s?state=%s", req.RedirectURI, req.State), nil
+	}
+	return fmt.Sprintf("%s?state=", req.RedirectURI), nil
+}
+
+func (s *Service) GetOauthCode(token *model.Token, req *model.OauthCodeRequest) (string, *model.OauthErrorResponse) {
+	var code string
+	var oauthAPP model.OauthAPP
+	if req.ResponseType != "code" {
+		return code, model.NewOauthErrorResponse("unsupported_response_type")
+	}
+	tx := db.DB.Where("client_id = ?", req.ClientID).First(&oauthAPP)
+	if tx.RowsAffected == 0 {
+		return code, model.NewOauthErrorResponse("invalid_client_id")
+	}
+	if !xutil.IsContains(req.RedirectURI, strings.Split(oauthAPP.RedirectURI, ",")) {
+		return code, model.NewOauthErrorResponse("invalid_redirect_uri")
+	}
+	appScopes := strings.Split(oauthAPP.Scope, ",")
+	scopes := strings.Split(req.Scope, " ")
+	for _, _scope := range scopes {
+		if !xutil.IsContains(_scope, appScopes) {
+			return code, model.NewOauthErrorResponse("invalid_scope")
 		}
 	}
 	code = uuid.NewString()
 	oauthCode := model.OauthCode{
 		Code:         code,
 		Username:     token.Username,
-		ClientID:     clientID,
+		ClientID:     req.ClientID,
 		ClientSecret: oauthAPP.ClientSecret,
-		RedirectURI:  redirectURI,
-		Scope:        strings.Replace(scope, " ", ",", -1),
+		RedirectURI:  req.RedirectURI,
+		Scope:        strings.Replace(req.Scope, " ", ",", -1),
 		ExpiresAt:    time.Now().UTC().Add(5 * time.Minute),
 	}
 	err := datastorage.DS.StoreCode(&oauthCode)
 	if err != nil {
-		return code, util.NewRespError(err)
+		return code, model.NewOauthErrorResponse("server_error")
 	}
-	if state != "" {
-		return fmt.Sprintf("%s?code=%s&state=%s", redirectURI, code, state), nil
+	if req.State != "" {
+		return fmt.Sprintf("%s?code=%s&state=%s", req.RedirectURI, code, req.State), nil
 	}
-	return fmt.Sprintf("%s?code=%s", redirectURI, code), nil
+	return fmt.Sprintf("%s?code=%s", req.RedirectURI, code), nil
 }
 
-func (s *Service) GetOauthToken(code, clientID, clientSecret, redirectURI, grantType string) (*model.OauthTokenResponse, util.RespError) {
-	if grantType != "authorization_code" {
-		return nil, util.NewRespError(errors.New("不支持的 grant_type")).WithCode(xresponse.HttpBadRequest)
+func (s *Service) GetOauthToken(req *model.OauthTokenRequest) (*model.OauthTokenResponse, *model.OauthErrorResponse) {
+	if req.GrantType != "authorization_code" {
+		return nil, model.NewOauthErrorResponse("unsupported_grant_type")
 	}
-	oauthCode, err := datastorage.DS.LoadCode(code, clientID)
+	oauthCode, err := datastorage.DS.LoadCode(req.Code, req.ClientID)
 	if err != nil {
-		return nil, util.NewRespError(errors.New("无效的 code")).WithCode(xresponse.HttpBadRequest)
+		return nil, model.NewOauthErrorResponse("invalid_code")
 	}
 	defer func() {
-		_ = datastorage.DS.DeleteCode(code, clientID)
+		_ = datastorage.DS.DeleteCode(req.Code, req.ClientID)
 	}()
 	if oauthCode.ExpiresAt.Before(time.Now().UTC()) {
-		return nil, util.NewRespError(errors.New("code 已过期")).WithCode(xresponse.HttpBadRequest)
+		return nil, model.NewOauthErrorResponse("invalid_code")
 	}
-	if oauthCode.ClientID != clientID {
-		return nil, util.NewRespError(errors.New("无效的 client_id")).WithCode(xresponse.HttpBadRequest)
+	if oauthCode.ClientID != req.ClientID {
+		return nil, model.NewOauthErrorResponse("invalid_client")
 	}
-	if oauthCode.RedirectURI != redirectURI {
-		return nil, util.NewRespError(errors.New("无效的 redirect_uri")).WithCode(xresponse.HttpBadRequest)
+	if oauthCode.RedirectURI != req.RedirectURI {
+		return nil, model.NewOauthErrorResponse("invalid_redirect_uri")
 	}
-	if clientSecret != "" {
-		if clientSecret != oauthCode.ClientSecret {
-			return nil, util.NewRespError(errors.New("无效的 client_secret")).WithCode(xresponse.HttpBadRequest)
+	if req.ClientSecret != "" {
+		if req.ClientSecret != oauthCode.ClientSecret {
+			return nil, model.NewOauthErrorResponse("invalid_client_secret")
 		}
 	}
 	oauthTokenResponse, err := s.createOauthToken(oauthCode)
 	if err != nil {
-		return nil, util.NewRespError(err)
+		return nil, model.NewOauthErrorResponse("server_error")
 	}
 	return oauthTokenResponse, nil
 }
@@ -124,36 +146,36 @@ func (s *Service) createOrSetOauthToken(username, tokenType, scope, clientID str
 	return tokenStr, nil
 }
 
-func (s *Service) validateOauthRefreshToken(refreshToken, clientID, clientSecret string) (*model.Token, error) {
+func (s *Service) validateOauthRefreshToken(refreshToken, clientID, clientSecret string) (*model.Token, *model.OauthErrorResponse) {
 	var oauthAPP model.OauthAPP
 	var token model.Token
 	_, err := xjwt.ParseToken(refreshToken, config.Conf.Secret.TokenID, &token)
 	if err != nil {
-		return nil, err
+		return nil, model.NewOauthErrorResponse("invalid_token")
 	}
 	err = db.DB.Where("client_id = ?", clientID).First(&oauthAPP).Error
 	if err != nil {
-		return nil, err
+		return nil, model.NewOauthErrorResponse("invalid_client")
 	}
 	if clientSecret != "" {
 		if clientSecret != oauthAPP.ClientSecret {
-			return nil, errors.New("无效的 client_secret")
+			return nil, model.NewOauthErrorResponse("invalid_client_secret")
 		}
 	}
 	return &token, nil
 }
 
-func (s *Service) RefreshOauthToken(refreshToken, clientID, grantType, clientSecret string) (*model.OauthTokenResponse, util.RespError) {
-	if grantType != "refresh_token" {
-		return nil, util.NewRespError(errors.New("不支持的 grant_type")).WithCode(xresponse.HttpBadRequest)
+func (s *Service) RefreshOauthToken(req *model.OauthTokenRequest) (*model.OauthTokenResponse, *model.OauthErrorResponse) {
+	if req.GrantType != "refresh_token" {
+		return nil, model.NewOauthErrorResponse("unsupported_grant_type")
 	}
-	token, err := s.validateOauthRefreshToken(refreshToken, clientID, clientSecret)
-	if err != nil {
-		return nil, util.NewRespError(err)
+	token, _err := s.validateOauthRefreshToken(req.RefreshToken, req.ClientID, req.ClientSecret)
+	if _err != nil {
+		return nil, _err
 	}
-	accessToken, err := s.createOrSetOauthToken(token.Username, model.OauthAccessToken, token.Scope, clientID, accessTokenExpiration)
+	accessToken, err := s.createOrSetOauthToken(token.Username, model.OauthAccessToken, token.Scope, req.ClientID, accessTokenExpiration)
 	if err != nil {
-		return nil, util.NewRespError(err)
+		return nil, model.NewOauthErrorResponse("server_error")
 	}
 	return &model.OauthTokenResponse{
 		AccessToken: accessToken,
@@ -162,14 +184,14 @@ func (s *Service) RefreshOauthToken(refreshToken, clientID, grantType, clientSec
 	}, nil
 }
 
-func (s *Service) RevokeOauthToken(refreshToken, clientID, clientSecret string) util.RespError {
-	token, err := s.validateOauthRefreshToken(refreshToken, clientID, clientSecret)
-	if err != nil {
-		return util.NewRespError(err)
+func (s *Service) RevokeOauthToken(req *model.OauthRevokeTokenRequest) *model.OauthErrorResponse {
+	token, _err := s.validateOauthRefreshToken(req.Token, req.ClientID, req.ClientSecret)
+	if _err != nil {
+		return _err
 	}
-	err = datastorage.DS.DeleteToken(s.generateOauthTokenID(token), model.OauthRefreshToken)
+	err := datastorage.DS.DeleteToken(s.generateOauthTokenID(token), model.OauthRefreshToken)
 	if err != nil {
-		return util.NewRespError(err)
+		return model.NewOauthErrorResponse("server_error")
 	}
 	return nil
 }

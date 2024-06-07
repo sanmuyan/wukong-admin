@@ -11,11 +11,49 @@
  Target Server Version : 80032 (8.0.32)
  File Encoding         : 65001
 
- Date: 05/06/2024 10:58:12
+ Date: 07/06/2024 18:04:24
 */
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for oauth_apps
+-- ----------------------------
+DROP TABLE IF EXISTS `oauth_apps`;
+CREATE TABLE `oauth_apps`  (
+                               `id` int NOT NULL AUTO_INCREMENT,
+                               `app_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                               `client_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                               `client_secret` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                               `scope` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+                               `redirect_uri` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+                               `comment` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+                               `created_at` datetime NULL DEFAULT NULL,
+                               `updated_at` datetime NULL DEFAULT NULL,
+                               PRIMARY KEY (`id`) USING BTREE,
+                               UNIQUE INDEX `name_index`(`app_name` ASC) USING BTREE,
+                               UNIQUE INDEX `client_id_index`(`client_id` ASC) USING BTREE
+);
+
+-- ----------------------------
+-- Table structure for oauth_codes
+-- ----------------------------
+DROP TABLE IF EXISTS `oauth_codes`;
+CREATE TABLE `oauth_codes`  (
+                                `id` bigint NOT NULL AUTO_INCREMENT,
+                                `code` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                                `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                                `client_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                                `client_secret` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+                                `redirect_uri` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+                                `scope` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+                                `expires_at` datetime NOT NULL,
+                                `created_at` datetime NULL DEFAULT NULL,
+                                `updated_at` datetime NULL DEFAULT NULL,
+                                PRIMARY KEY (`id`) USING BTREE,
+                                UNIQUE INDEX `code_client_id_index`(`code` ASC, `client_id` ASC) USING BTREE
+);
 
 -- ----------------------------
 -- Table structure for resources
@@ -28,7 +66,8 @@ CREATE TABLE `resources`  (
                               `comment` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
                               `created_at` datetime NULL DEFAULT NULL,
                               `updated_at` datetime NULL DEFAULT NULL,
-                              PRIMARY KEY (`id`) USING BTREE
+                              PRIMARY KEY (`id`) USING BTREE,
+                              UNIQUE INDEX `resource_path_index`(`resource_path` ASC) USING BTREE
 );
 
 -- ----------------------------
@@ -60,9 +99,8 @@ CREATE TABLE `roles`  (
                           `comment` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
                           `created_at` datetime NULL DEFAULT NULL,
                           `updated_at` datetime NULL DEFAULT NULL,
-                          PRIMARY KEY (`id`, `role_name`) USING BTREE,
-                          UNIQUE INDEX `role_name`(`role_name` ASC) USING BTREE,
-                          INDEX `id`(`id` ASC) USING BTREE
+                          PRIMARY KEY (`id`) USING BTREE,
+                          UNIQUE INDEX `role_name_index`(`role_name` ASC) USING BTREE
 );
 
 -- ----------------------------
@@ -70,13 +108,13 @@ CREATE TABLE `roles`  (
 -- ----------------------------
 DROP TABLE IF EXISTS `tokens`;
 CREATE TABLE `tokens`  (
-                           `token_key` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                           `token_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
                            `token_type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-                           `token` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                           `token` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
                            `expires_at` datetime NULL DEFAULT NULL,
                            `created_at` datetime NULL DEFAULT NULL,
                            `updated_at` datetime NULL DEFAULT NULL,
-                           UNIQUE INDEX `token_key_type_index`(`token_key` ASC, `token_type` ASC) USING BTREE
+                           UNIQUE INDEX `token_key_type_index`(`token_id` ASC, `token_type` ASC) USING BTREE
 );
 
 -- ----------------------------
