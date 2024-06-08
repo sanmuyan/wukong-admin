@@ -83,6 +83,6 @@ func (c *StoreToken) WithExpiresAt(expiresAt *int64) *StoreToken {
 	if expiresAt == nil {
 		return c
 	}
-	c.ExpiresAt = xutil.PtrTo[time.Time](time.Unix(*expiresAt, 0))
+	c.ExpiresAt = xutil.PtrTo[time.Time](time.Unix(*expiresAt, 0).UTC())
 	return c
 }

@@ -15,9 +15,9 @@ func (s *Service) CreateOrSetToken(token *model.Token, expiresAt int) (string, e
 	token.UUID = uuid.NewString()
 	ttl := time.Duration(expiresAt) * time.Second
 	if ttl > 0 {
-		token.ExpiresAt = xutil.PtrTo[int64](time.Now().UTC().Add(ttl).Unix())
+		token.ExpiresAt = xutil.PtrTo[int64](time.Now().Add(ttl).Unix())
 	}
-	token.IssuedAt = time.Now().UTC().Unix()
+	token.IssuedAt = time.Now().Unix()
 	err := token.Valid()
 	if err != nil {
 		return "", err

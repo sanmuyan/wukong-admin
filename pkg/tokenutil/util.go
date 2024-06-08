@@ -20,7 +20,7 @@ func ValidToken(tokenStr string) (token model.Token, err error) {
 		return token, errors.New("令牌不合法")
 	}
 	if token.ExpiresAt != nil {
-		if time.Now().UTC().Unix() > *token.ExpiresAt {
+		if time.Now().Unix() > *token.ExpiresAt {
 			return token, errors.New("令牌已过期")
 		}
 	}
