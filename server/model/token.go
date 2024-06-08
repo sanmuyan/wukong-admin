@@ -2,10 +2,13 @@ package model
 
 import (
 	"errors"
+	"github.com/sanmuyan/xpkg/xutil"
+	"time"
 )
 
 type Token struct {
 	userID      int
+	UUID        string `json:"uuid"`
 	Username    string `json:"username" binding:"required"`
 	AccessLevel int    `json:"access_level,omitempty"`
 	TokenType   string `json:"token_type" binding:"required"`
@@ -29,10 +32,7 @@ func (t *Token) Valid() error {
 	if t.Issuer != AppName {
 		return err
 	}
-	if t.Username == "" {
-		return err
-	}
-	if t.TokenType == "" {
+	if xutil.IsZero(t.Username, t.TokenType) {
 		return err
 	}
 	if _, ok := TokenTypes[t.TokenType]; !ok {
@@ -58,4 +58,31 @@ func init() {
 	TokenTypes[ApiToken] = struct{}{}
 	TokenTypes[OauthAccessToken] = struct{}{}
 	TokenTypes[OauthRefreshToken] = struct{}{}
+}
+
+type StoreToken struct {
+	UUID      string     `gorm:"<-:create"`
+	Username  string     `gorm:"<-:create"`
+	TokenType string     `gorm:"<-:create"`
+	TokenStr  string     `gorm:"<-:create"`
+	ExpiresAt *time.Time `gorm:"<-:create"`
+	CreatedAt time.Time  `gorm:"<-:create"`
+	UpdatedAt time.Time
+}
+
+func NewTokenStore(token *Token) *StoreToken {
+	return &StoreToken{UUID: token.UUID, TokenType: token.TokenType, Username: token.Username}
+}
+
+func (c *StoreToken) WithTokenStr(tokenStr string) *StoreToken {
+	c.TokenStr = tokenStr
+	return c
+}
+
+func (c *StoreToken) WithExpiresAt(expiresAt *int64) *StoreToken {
+	if expiresAt == nil {
+		return c
+	}
+	c.ExpiresAt = xutil.PtrTo[time.Time](time.Unix(*expiresAt, 0))
+	return c
 }

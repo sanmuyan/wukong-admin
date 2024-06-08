@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 	"wukong/pkg/config"
-	"wukong/pkg/datastorage"
+	"wukong/pkg/datastore"
 	"wukong/pkg/db"
 	"wukong/server/model"
 )
@@ -16,31 +16,6 @@ import (
 const (
 	accessTokenExpiration = 3600
 )
-
-func (s *Service) GetOauthRedirectURI(req *model.OauthCodeRequest) (string, *model.OauthErrorResponse) {
-	var oauthAPP model.OauthAPP
-	if req.ResponseType != "code" {
-		return "", model.NewOauthErrorResponse("unsupported_response_type")
-	}
-	tx := db.DB.Where("client_id = ?", req.ClientID).First(&oauthAPP)
-	if tx.RowsAffected == 0 {
-		return "", model.NewOauthErrorResponse("invalid_client_id")
-	}
-	if !xutil.IsContains(req.RedirectURI, strings.Split(oauthAPP.RedirectURI, ",")) {
-		return "", model.NewOauthErrorResponse("invalid_redirect_uri")
-	}
-	appScopes := strings.Split(oauthAPP.Scope, ",")
-	scopes := strings.Split(req.Scope, " ")
-	for _, _scope := range scopes {
-		if !xutil.IsContains(_scope, appScopes) {
-			return "", model.NewOauthErrorResponse("invalid_scope")
-		}
-	}
-	if req.State != "" {
-		return fmt.Sprintf("%s?state=%s", req.RedirectURI, req.State), nil
-	}
-	return fmt.Sprintf("%s?state=", req.RedirectURI), nil
-}
 
 func (s *Service) GetOauthCode(token *model.Token, req *model.OauthCodeRequest) (string, *model.OauthErrorResponse) {
 	var code string
@@ -72,7 +47,7 @@ func (s *Service) GetOauthCode(token *model.Token, req *model.OauthCodeRequest) 
 		Scope:        strings.Replace(req.Scope, " ", ",", -1),
 		ExpiresAt:    time.Now().UTC().Add(5 * time.Minute),
 	}
-	err := datastorage.DS.StoreCode(&oauthCode)
+	err := datastore.DS.StoreCode(&oauthCode)
 	if err != nil {
 		return code, model.NewOauthErrorResponse("server_error")
 	}
@@ -86,12 +61,12 @@ func (s *Service) GetOauthToken(req *model.OauthTokenRequest) (*model.OauthToken
 	if req.GrantType != "authorization_code" {
 		return nil, model.NewOauthErrorResponse("unsupported_grant_type")
 	}
-	oauthCode, err := datastorage.DS.LoadCode(req.Code, req.ClientID)
+	oauthCode, err := datastore.DS.LoadCode(req.Code, req.ClientID)
 	if err != nil {
 		return nil, model.NewOauthErrorResponse("invalid_code")
 	}
 	defer func() {
-		_ = datastorage.DS.DeleteCode(req.Code, req.ClientID)
+		_ = datastore.DS.DeleteCode(req.Code, req.ClientID)
 	}()
 	if oauthCode.ExpiresAt.Before(time.Now().UTC()) {
 		return nil, model.NewOauthErrorResponse("invalid_code")
@@ -139,7 +114,7 @@ func (s *Service) createOrSetOauthToken(username, tokenType, scope, clientID str
 	token.TokenType = tokenType
 	token.Scope = scope
 	token.ClientID = clientID
-	tokenStr, err := s.CreateOrSetToken(&token, s.generateOauthTokenID(&token), expiresAt)
+	tokenStr, err := s.CreateOrSetToken(&token, expiresAt)
 	if err != nil {
 		return tokenStr, err
 	}
@@ -149,7 +124,7 @@ func (s *Service) createOrSetOauthToken(username, tokenType, scope, clientID str
 func (s *Service) validateOauthRefreshToken(refreshToken, clientID, clientSecret string) (*model.Token, *model.OauthErrorResponse) {
 	var oauthAPP model.OauthAPP
 	var token model.Token
-	_, err := xjwt.ParseToken(refreshToken, config.Conf.Secret.TokenID, &token)
+	_, err := xjwt.ParseToken(refreshToken, config.Conf.Secret.TokenKey, &token)
 	if err != nil {
 		return nil, model.NewOauthErrorResponse("invalid_token")
 	}
@@ -173,6 +148,9 @@ func (s *Service) RefreshOauthToken(req *model.OauthTokenRequest) (*model.OauthT
 	if _err != nil {
 		return nil, _err
 	}
+	if token.TokenType != model.OauthRefreshToken {
+		return nil, model.NewOauthErrorResponse("invalid_token")
+	}
 	accessToken, err := s.createOrSetOauthToken(token.Username, model.OauthAccessToken, token.Scope, req.ClientID, accessTokenExpiration)
 	if err != nil {
 		return nil, model.NewOauthErrorResponse("server_error")
@@ -189,7 +167,10 @@ func (s *Service) RevokeOauthToken(req *model.OauthRevokeTokenRequest) *model.Oa
 	if _err != nil {
 		return _err
 	}
-	err := datastorage.DS.DeleteToken(s.generateOauthTokenID(token), model.OauthRefreshToken)
+	if token.TokenType != model.OauthRefreshToken {
+		return model.NewOauthErrorResponse("invalid_token")
+	}
+	err := datastore.DS.DeleteToken(model.NewTokenStore(token))
 	if err != nil {
 		return model.NewOauthErrorResponse("server_error")
 	}

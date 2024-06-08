@@ -35,7 +35,7 @@ func (s *Service) Login(login model.Login) (string, util.RespError) {
 		AccessLevel: s.GetMaxAccessLevel(s.GetUserRoles(user.ID)),
 		TokenType:   model.SessionToken,
 	}
-	tokenStr, err := s.CreateOrSetToken(&token, token.Username, config.Conf.TokenTTL)
+	tokenStr, err := s.CreateOrSetToken(&token, config.Conf.TokenTTL)
 	if err != nil {
 		return "", util.NewRespError(err)
 	}

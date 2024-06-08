@@ -83,5 +83,7 @@ func RevokeOauthToken(c *gin.Context) {
 		c.JSON(200, err)
 		return
 	}
-	c.JSON(200, `{}`)
+	msg := make(map[string]string)
+	msg["message"] = "success"
+	c.JSON(200, msg)
 }

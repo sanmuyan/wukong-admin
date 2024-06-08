@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 	"wukong/pkg/config"
-	"wukong/pkg/datastorage"
+	"wukong/pkg/datastore"
 	"wukong/server/model"
 )
 
@@ -15,7 +15,7 @@ func ValidToken(tokenStr string) (token model.Token, err error) {
 	if tokenStr == "" {
 		return token, errors.New("未携带令牌")
 	}
-	_, err = xjwt.ParseToken(tokenStr, config.Conf.Secret.TokenID, &token)
+	_, err = xjwt.ParseToken(tokenStr, config.Conf.Secret.TokenKey, &token)
 	if err != nil {
 		return token, errors.New("令牌不合法")
 	}
@@ -24,7 +24,7 @@ func ValidToken(tokenStr string) (token model.Token, err error) {
 			return token, errors.New("令牌已过期")
 		}
 	}
-	if !config.Conf.DisableVerifyServerToken && !datastorage.DS.IsTokenExist(token.Username, token.TokenType, tokenStr) {
+	if !config.Conf.DisableVerifyServerToken && !datastore.DS.IsTokenExist(model.NewTokenStore(&token)) {
 		return token, errors.New("服务器令牌已过期")
 	}
 	return token, nil

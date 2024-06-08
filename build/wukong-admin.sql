@@ -11,7 +11,7 @@
  Target Server Version : 80032 (8.0.32)
  File Encoding         : 65001
 
- Date: 07/06/2024 18:04:24
+ Date: 08/06/2024 18:37:57
 */
 
 SET NAMES utf8mb4;
@@ -41,7 +41,6 @@ CREATE TABLE `oauth_apps`  (
 -- ----------------------------
 DROP TABLE IF EXISTS `oauth_codes`;
 CREATE TABLE `oauth_codes`  (
-                                `id` bigint NOT NULL AUTO_INCREMENT,
                                 `code` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
                                 `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
                                 `client_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
@@ -51,7 +50,6 @@ CREATE TABLE `oauth_codes`  (
                                 `expires_at` datetime NOT NULL,
                                 `created_at` datetime NULL DEFAULT NULL,
                                 `updated_at` datetime NULL DEFAULT NULL,
-                                PRIMARY KEY (`id`) USING BTREE,
                                 UNIQUE INDEX `code_client_id_index`(`code` ASC, `client_id` ASC) USING BTREE
 );
 
@@ -104,17 +102,18 @@ CREATE TABLE `roles`  (
 );
 
 -- ----------------------------
--- Table structure for tokens
+-- Table structure for store_tokens
 -- ----------------------------
-DROP TABLE IF EXISTS `tokens`;
-CREATE TABLE `tokens`  (
-                           `token_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-                           `token_type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-                           `token` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-                           `expires_at` datetime NULL DEFAULT NULL,
-                           `created_at` datetime NULL DEFAULT NULL,
-                           `updated_at` datetime NULL DEFAULT NULL,
-                           UNIQUE INDEX `token_key_type_index`(`token_id` ASC, `token_type` ASC) USING BTREE
+DROP TABLE IF EXISTS `store_tokens`;
+CREATE TABLE `store_tokens`  (
+                                 `uuid` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                                 `token_type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                                 `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                                 `token_str` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                                 `expires_at` datetime NULL DEFAULT NULL,
+                                 `created_at` datetime NULL DEFAULT NULL,
+                                 `updated_at` datetime NULL DEFAULT NULL,
+                                 PRIMARY KEY (`uuid`) USING BTREE
 );
 
 -- ----------------------------

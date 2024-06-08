@@ -19,7 +19,7 @@ func CreateToken(c *gin.Context) {
 		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
-	tokenStr, err := svc.CreateOrSetToken(&token, token.Username, 0)
+	tokenStr, err := svc.CreateOrSetToken(&token, 0)
 	if err != nil {
 		logrus.Errorf("创建token: %s", err)
 		util.Respf().FailWithError(util.NewRespError(err)).Response(util.GinRespf(c))

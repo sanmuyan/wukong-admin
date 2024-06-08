@@ -3,7 +3,6 @@ package model
 import "time"
 
 type OauthCode struct {
-	ID           int
 	Code         string
 	Username     string
 	ClientID     string

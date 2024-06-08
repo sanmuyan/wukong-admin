@@ -6,7 +6,7 @@ type Database struct {
 }
 
 type Secret struct {
-	TokenID string `mapstructure:"token_key"`
+	TokenKey string `mapstructure:"token_key"`
 }
 
 type AttributeMap struct {
@@ -47,7 +47,7 @@ type Config struct {
 	LogLevel                 int             `mapstructure:"log_level"`
 	ServerBind               string          `mapstructure:"server_bind"`
 	ConfigSecretKey          string          `mapstructure:"config_secret_key"`
-	DataStorage              string          `mapstructure:"data_storage"`
+	DataStore                string          `mapstructure:"data_store"`
 	DisableVerifyServerToken bool            `mapstructure:"disable_verify_server_token"`
 	LDAP                     LDAP            `mapstructure:"ldap"`
 	OauthProviders           []OauthProvider `mapstructure:"oauth_providers"`
