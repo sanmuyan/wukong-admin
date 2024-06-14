@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+	"wukong/pkg/config"
 	"wukong/pkg/db"
 	"wukong/server/model"
 )
@@ -38,7 +39,7 @@ func (c *RDBStore) IsTokenExist(ts *model.StoreToken) bool {
 }
 
 func (c *RDBStore) generateTokenKey(ts *model.StoreToken) string {
-	return fmt.Sprintf("%s:store_tokens:%s:%s:%s", model.AppName, ts.TokenType, ts.Username, ts.UUID)
+	return fmt.Sprintf("%s:store_tokens:%s:%s:%s", config.Conf.AppName, ts.TokenType, ts.Username, ts.UUID)
 }
 
 func (c *RDBStore) StoreCode(code *model.OauthCode) error {
@@ -61,5 +62,5 @@ func (c *RDBStore) DeleteCode(code string, clientID string) error {
 }
 
 func (c *RDBStore) generateCodeKey(code string, clientID string) string {
-	return fmt.Sprintf("%s:codes:%s:%s", model.AppName, clientID, code)
+	return fmt.Sprintf("%s:codes:%s:%s", config.Conf.AppName, clientID, code)
 }

@@ -28,13 +28,11 @@ func OauthCallback(c *gin.Context) {
 		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
-	token, err := svc.OauthCallback(c.Query("code"), c.Query("state"))
+	res, err := svc.OauthCallback(c.Query("code"), c.Query("state"))
 	if err != nil {
 		logrus.Errorf("OAuth 回调失败: %s", err.Err)
 		util.Respf().FailWithError(err).Response(util.GinRespf(c))
 		return
 	}
-	data := make(map[string]any)
-	data["token"] = token
-	util.Respf().Ok().WithData(data).Response(util.GinRespf(c))
+	util.Respf().Ok().WithData(res).Response(util.GinRespf(c))
 }

@@ -11,7 +11,7 @@ import (
 )
 
 func (s *Service) CreateOrSetToken(token *model.Token, expiresAt int) (string, error) {
-	token.Issuer = model.AppName
+	token.Issuer = config.Conf.AppName
 	token.UUID = uuid.NewString()
 	ttl := time.Duration(expiresAt) * time.Second
 	if ttl > 0 {

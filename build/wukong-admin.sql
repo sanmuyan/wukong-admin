@@ -11,11 +11,57 @@
  Target Server Version : 80032 (8.0.32)
  File Encoding         : 65001
 
- Date: 08/06/2024 18:37:57
+ Date: 15/06/2024 01:36:52
 */
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for mfa_app_bind_sessions
+-- ----------------------------
+DROP TABLE IF EXISTS `mfa_app_bind_sessions`;
+CREATE TABLE `mfa_app_bind_sessions`  (
+                                          `id` int NOT NULL AUTO_INCREMENT,
+                                          `user_id` int NOT NULL,
+                                          `totp_secret` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                                          `expire_at` datetime NOT NULL,
+                                          `updated_at` datetime NULL DEFAULT NULL,
+                                          `created_at` datetime NULL DEFAULT NULL,
+                                          PRIMARY KEY (`id`) USING BTREE,
+                                          UNIQUE INDEX `uq_index_totp_key`(`totp_secret` ASC) USING BTREE
+);
+
+-- ----------------------------
+-- Table structure for mfa_apps
+-- ----------------------------
+DROP TABLE IF EXISTS `mfa_apps`;
+CREATE TABLE `mfa_apps`  (
+                             `id` int NOT NULL AUTO_INCREMENT,
+                             `user_id` int NOT NULL,
+                             `totp_secret` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                             `updated_at` datetime NULL DEFAULT NULL,
+                             `created_at` datetime NULL DEFAULT NULL,
+                             PRIMARY KEY (`id`) USING BTREE,
+                             UNIQUE INDEX `uq_index_totp_key`(`totp_secret` ASC) USING BTREE,
+                             UNIQUE INDEX `uq_index_user_id`(`user_id` ASC) USING BTREE
+);
+
+-- ----------------------------
+-- Table structure for mfa_login_sessions
+-- ----------------------------
+DROP TABLE IF EXISTS `mfa_login_sessions`;
+CREATE TABLE `mfa_login_sessions`  (
+                                       `id` int NOT NULL AUTO_INCREMENT,
+                                       `user_id` int NOT NULL,
+                                       `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                                       `session_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                                       `mfa_provider` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                                       `expire_at` datetime NOT NULL,
+                                       `updated_at` datetime NULL DEFAULT NULL,
+                                       `created_at` datetime NULL DEFAULT NULL,
+                                       PRIMARY KEY (`id`) USING BTREE
+);
 
 -- ----------------------------
 -- Table structure for oauth_apps
@@ -32,8 +78,8 @@ CREATE TABLE `oauth_apps`  (
                                `created_at` datetime NULL DEFAULT NULL,
                                `updated_at` datetime NULL DEFAULT NULL,
                                PRIMARY KEY (`id`) USING BTREE,
-                               UNIQUE INDEX `name_index`(`app_name` ASC) USING BTREE,
-                               UNIQUE INDEX `client_id_index`(`client_id` ASC) USING BTREE
+                               UNIQUE INDEX `index_app_name`(`app_name` ASC) USING BTREE,
+                               UNIQUE INDEX `index_client_id`(`client_id` ASC) USING BTREE
 );
 
 -- ----------------------------
@@ -41,16 +87,64 @@ CREATE TABLE `oauth_apps`  (
 -- ----------------------------
 DROP TABLE IF EXISTS `oauth_codes`;
 CREATE TABLE `oauth_codes`  (
+                                `id` int NOT NULL,
                                 `code` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
                                 `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
                                 `client_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
                                 `client_secret` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-                                `redirect_uri` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+                                `redirect_uri` varchar(1020) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
                                 `scope` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
                                 `expires_at` datetime NOT NULL,
                                 `created_at` datetime NULL DEFAULT NULL,
                                 `updated_at` datetime NULL DEFAULT NULL,
-                                UNIQUE INDEX `code_client_id_index`(`code` ASC, `client_id` ASC) USING BTREE
+                                PRIMARY KEY (`id`) USING BTREE,
+                                UNIQUE INDEX `uq_index_code_client_id`(`code` ASC, `client_id` ASC) USING BTREE
+);
+
+-- ----------------------------
+-- Table structure for pass_key_login_sessions
+-- ----------------------------
+DROP TABLE IF EXISTS `pass_key_login_sessions`;
+CREATE TABLE `pass_key_login_sessions`  (
+                                            `id` int NOT NULL AUTO_INCREMENT,
+                                            `user_id` int NOT NULL,
+                                            `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                                            `session_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                                            `session_raw` varchar(1020) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                                            `expire_at` datetime NOT NULL,
+                                            `updated_at` datetime NULL DEFAULT NULL,
+                                            `created_at` datetime NULL DEFAULT NULL,
+                                            PRIMARY KEY (`id`) USING BTREE
+);
+
+-- ----------------------------
+-- Table structure for pass_key_register_sessions
+-- ----------------------------
+DROP TABLE IF EXISTS `pass_key_register_sessions`;
+CREATE TABLE `pass_key_register_sessions`  (
+                                               `id` int NOT NULL AUTO_INCREMENT,
+                                               `user_id` int NOT NULL,
+                                               `session_raw` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                                               `expire_at` datetime NOT NULL,
+                                               `updated_at` datetime NULL DEFAULT NULL,
+                                               `created_at` datetime NULL DEFAULT NULL,
+                                               PRIMARY KEY (`id`) USING BTREE
+);
+
+-- ----------------------------
+-- Table structure for pass_keys
+-- ----------------------------
+DROP TABLE IF EXISTS `pass_keys`;
+CREATE TABLE `pass_keys`  (
+                              `id` int NOT NULL AUTO_INCREMENT,
+                              `display_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                              `user_id` int NOT NULL,
+                              `credential_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                              `credential_raw` varchar(1020) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+                              `last_used_at` datetime NULL DEFAULT NULL,
+                              `updated_at` datetime NULL DEFAULT NULL,
+                              `created_at` datetime NULL DEFAULT NULL,
+                              PRIMARY KEY (`id`) USING BTREE
 );
 
 -- ----------------------------
@@ -65,7 +159,7 @@ CREATE TABLE `resources`  (
                               `created_at` datetime NULL DEFAULT NULL,
                               `updated_at` datetime NULL DEFAULT NULL,
                               PRIMARY KEY (`id`) USING BTREE,
-                              UNIQUE INDEX `resource_path_index`(`resource_path` ASC) USING BTREE
+                              UNIQUE INDEX `index_resource_path`(`resource_path` ASC) USING BTREE
 );
 
 -- ----------------------------
@@ -79,10 +173,10 @@ CREATE TABLE `role_binds`  (
                                `created_at` datetime NULL DEFAULT NULL,
                                `updated_at` datetime NULL DEFAULT NULL,
                                PRIMARY KEY (`id`) USING BTREE,
-                               INDEX `role_bind_resource_id`(`resource_id` ASC) USING BTREE,
-                               INDEX `role_bind_role_id`(`role_id` ASC) USING BTREE,
-                               CONSTRAINT `role_bind_resource_id` FOREIGN KEY (`resource_id`) REFERENCES `resources` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
-                               CONSTRAINT `role_bind_role_id` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+                               INDEX `ct_role_bind_resource_id`(`resource_id` ASC) USING BTREE,
+                               INDEX `ct_role_bind_role_id`(`role_id` ASC) USING BTREE,
+                               CONSTRAINT `role_bind_role_id` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+                               CONSTRAINT `xrole_bind_resource_id` FOREIGN KEY (`resource_id`) REFERENCES `resources` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- ----------------------------
@@ -98,7 +192,7 @@ CREATE TABLE `roles`  (
                           `created_at` datetime NULL DEFAULT NULL,
                           `updated_at` datetime NULL DEFAULT NULL,
                           PRIMARY KEY (`id`) USING BTREE,
-                          UNIQUE INDEX `role_name_index`(`role_name` ASC) USING BTREE
+                          INDEX `index_role_name`(`role_name` ASC) USING BTREE
 );
 
 -- ----------------------------
@@ -127,10 +221,10 @@ CREATE TABLE `user_binds`  (
                                `created_at` datetime NULL DEFAULT NULL,
                                `updated_at` datetime NULL DEFAULT NULL,
                                PRIMARY KEY (`id`) USING BTREE,
-                               INDEX `user_bind_role_id`(`role_id` ASC) USING BTREE,
-                               INDEX `user_bind_user_id`(`user_id` ASC) USING BTREE,
-                               CONSTRAINT `user_bind_role_id` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-                               CONSTRAINT `user_bind_user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
+                               INDEX `ct_user_bind_role_id`(`role_id` ASC) USING BTREE,
+                               INDEX `ct_user_bind_user_id`(`user_id` ASC) USING BTREE,
+                               CONSTRAINT `constraint_user_bind_role_id` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+                               CONSTRAINT `constraint_user_bind_user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
 );
 
 -- ----------------------------
@@ -149,7 +243,7 @@ CREATE TABLE `users`  (
                           `created_at` datetime NULL DEFAULT NULL,
                           `updated_at` datetime NULL DEFAULT NULL,
                           PRIMARY KEY (`id`) USING BTREE,
-                          UNIQUE INDEX `username_index`(`username` ASC) USING BTREE
+                          UNIQUE INDEX `uq_index_username`(`username` ASC) USING BTREE
 );
 
 SET FOREIGN_KEY_CHECKS = 1;

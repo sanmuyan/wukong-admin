@@ -36,8 +36,13 @@ type OauthProvider struct {
 	Provider     string   `mapstructure:"provider"`
 }
 
-type APP struct {
+type App struct {
 	OauthLoginRedirectURL string `mapstructure:"oauth_login_redirect_url"`
+}
+
+type WebAuthn struct {
+	RPID      string   `mapstructure:"rp_id"`
+	RPOrigins []string `mapstructure:"rp_origins"`
 }
 
 type Config struct {
@@ -51,7 +56,9 @@ type Config struct {
 	DisableVerifyServerToken bool            `mapstructure:"disable_verify_server_token"`
 	LDAP                     LDAP            `mapstructure:"ldap"`
 	OauthProviders           []OauthProvider `mapstructure:"oauth_providers"`
-	APP                      APP             `mapstructure:"app"`
+	App                      App             `mapstructure:"app"`
+	AppName                  string          `mapstructure:"app_name"`
+	WebAuthn                 WebAuthn        `mapstructure:"web_authn"`
 }
 
 var Conf Config

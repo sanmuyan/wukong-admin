@@ -13,10 +13,6 @@ import (
 	"wukong/server/model"
 )
 
-const (
-	accessTokenExpiration = 3600
-)
-
 func (s *Service) GetOauthCode(token *model.Token, req *model.OauthCodeRequest) (string, *model.OauthErrorResponse) {
 	var code string
 	var oauthAPP model.OauthAPP
@@ -90,7 +86,7 @@ func (s *Service) GetOauthToken(req *model.OauthTokenRequest) (*model.OauthToken
 }
 
 func (s *Service) createOauthToken(oauthCode *model.OauthCode) (*model.OauthTokenResponse, error) {
-	accessToken, err := s.createOrSetOauthToken(oauthCode.Username, model.OauthAccessToken, oauthCode.Scope, oauthCode.ClientID, accessTokenExpiration)
+	accessToken, err := s.createOrSetOauthToken(oauthCode.Username, model.OauthAccessToken, oauthCode.Scope, oauthCode.ClientID, config.AppAccessTokenExpiration)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +97,7 @@ func (s *Service) createOauthToken(oauthCode *model.OauthCode) (*model.OauthToke
 	oauthToken := model.OauthTokenResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
-		ExpiresIn:    accessTokenExpiration,
+		ExpiresIn:    config.AppAccessTokenExpiration,
 		TokenType:    "Bearer",
 	}
 	return &oauthToken, nil
@@ -151,13 +147,13 @@ func (s *Service) RefreshOauthToken(req *model.OauthTokenRequest) (*model.OauthT
 	if token.TokenType != model.OauthRefreshToken {
 		return nil, model.NewOauthErrorResponse("invalid_token")
 	}
-	accessToken, err := s.createOrSetOauthToken(token.Username, model.OauthAccessToken, token.Scope, req.ClientID, accessTokenExpiration)
+	accessToken, err := s.createOrSetOauthToken(token.Username, model.OauthAccessToken, token.Scope, req.ClientID, config.AppAccessTokenExpiration)
 	if err != nil {
 		return nil, model.NewOauthErrorResponse("server_error")
 	}
 	return &model.OauthTokenResponse{
 		AccessToken: accessToken,
-		ExpiresIn:   accessTokenExpiration,
+		ExpiresIn:   config.AppAccessTokenExpiration,
 		TokenType:   "Bearer",
 	}, nil
 }

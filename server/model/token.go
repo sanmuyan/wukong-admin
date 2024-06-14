@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/sanmuyan/xpkg/xutil"
 	"time"
+	"wukong/pkg/config"
 )
 
 type Token struct {
@@ -29,7 +30,7 @@ func (t *Token) GetUserID() int {
 
 func (t *Token) Valid() error {
 	err := errors.New("token is not required")
-	if t.Issuer != AppName {
+	if t.Issuer != config.Conf.AppName {
 		return err
 	}
 	if xutil.IsZero(t.Username, t.TokenType) {

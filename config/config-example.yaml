@@ -1,3 +1,5 @@
+# 应用名，不应该随意修改！
+app_name: wukong
 database:
   mysql: root:password@tcp(localhost:3306)/wukong?parseTime=true
   redis: localhost:6379
@@ -37,3 +39,8 @@ oauth_providers:
 app:
   # 通过应用登录时未登录时跳转 URL
   oauth_login_redirect_url: http://localhost/login?callback=
+web_authn:
+# WebAuthn 配置
+  rp_id: localhost:8080
+  rp_origins:
+    - http://localhost:8080

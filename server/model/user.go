@@ -4,11 +4,6 @@ import (
 	"time"
 )
 
-type Login struct {
-	Username string `json:"username" binding:"required"`
-	Password string `json:"password" binding:"required"`
-}
-
 type User struct {
 	ID          int       `json:"id"`
 	Username    string    `json:"username" gorm:"<-:create"`

@@ -9,20 +9,18 @@ import (
 )
 
 func Login(c *gin.Context) {
-	var login model.Login
-	if err := c.ShouldBindJSON(&login); err != nil {
+	var req model.LoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
-	token, err := svc.Login(login)
+	res, err := svc.Login(req)
 	if err != nil {
 		logrus.Errorf("用户登陆失败: %s", err.Err)
 		util.Respf().FailWithError(err).Response(util.GinRespf(c))
 		return
 	}
-	data := make(map[string]interface{})
-	data["token"] = token
-	util.Respf().Ok().WithData(data).Response(util.GinRespf(c))
+	util.Respf().Ok().WithData(res).Response(util.GinRespf(c))
 }
 
 func Logout(c *gin.Context) {

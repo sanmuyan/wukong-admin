@@ -29,6 +29,17 @@ func router(r *gin.Engine) {
 		apiGroup.GET("/profile", GetProfile)
 		apiGroup.PUT("/profile", UpdateProfile)
 
+		apiGroup.GET("/profile/mfaAppStatus", GetMFAAppStatus)
+		apiGroup.GET("/profile/mfaAppBeginBind", MFAAppBeginBind)
+		apiGroup.POST("/profile/mfaAppFinishBind", MFAppFinishBind)
+		apiGroup.DELETE("/profile/mfaApp", DeleteMFAApp)
+
+		apiGroup.GET("/profile/passKeys", GetPassKeys)
+		apiGroup.PUT("/profile/passKey", UpdatePassKey)
+		apiGroup.DELETE("/profile/passKey", DeletePassKey)
+		apiGroup.GET("/profile/passKeyBeginRegistration", PassKeyBeginRegistration)
+		apiGroup.POST("/profile/passKeyFinishRegistration", PassKeyFinishRegistration)
+
 		apiGroup.GET("/role", GetRoles)
 		apiGroup.POST("/role", CreateRole)
 		apiGroup.PUT("/role", UpdateRole)
@@ -61,6 +72,9 @@ func router(r *gin.Engine) {
 
 	}
 	r.POST("/api/login", Login)
+	r.POST("/api/mfaFinishLogin", MFAFinishLogin)
+	r.POST("/api/passKeyBeginLogin", PassKeyBeginLogin)
+	r.POST("/api/passKeyFinishLogin", PassKeyFinishLogin)
 	r.GET("/api/oauth/login", OauthLogin)
 	r.GET("/api/oauth/callback", OauthCallback)
 	r.POST("/api/oauth/token", GetOauthToken)

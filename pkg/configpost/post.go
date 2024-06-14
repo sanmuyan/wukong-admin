@@ -4,6 +4,7 @@ import (
 	"wukong/pkg/config"
 	"wukong/pkg/datastore"
 	"wukong/pkg/db"
+	"wukong/pkg/passkey"
 	"wukong/pkg/usersource"
 	"wukong/server/controller"
 )
@@ -12,11 +13,16 @@ func PostInit() {
 	if config.Conf.Database.Redis != "" {
 		db.InitRedis()
 	}
+	db.InitMysql()
+	initProviders()
+	controller.RunServer(config.Conf.ServerBind)
+}
+
+func initProviders() {
 	for _, oauthProvider := range config.Conf.OauthProviders {
 		config.OauthProviders[oauthProvider.Provider] = oauthProvider
 	}
-	db.InitMysql()
 	datastore.InitStore()
 	usersource.InitUserSource()
-	controller.RunServer(config.Conf.ServerBind)
+	passkey.InitWebAuthnConfig(config.Conf.AppName, config.Conf.WebAuthn.RPID, config.Conf.WebAuthn.RPOrigins)
 }
