@@ -12,32 +12,33 @@ func NewMySQLStore() *MySQLStore {
 	return &MySQLStore{}
 }
 
-func (c *MySQLStore) StoreToken(ts *model.StoreToken) error {
-	return db.DB.Create(ts).Error
+func (c *MySQLStore) StoreSession(s *model.Session, username ...string) error {
+	return db.DB.Create(s).Error
 }
 
-func (c *MySQLStore) DeleteToken(ts *model.StoreToken) error {
-	return db.DB.Where("uuid = ?", ts.UUID).Delete(&model.StoreToken{}).Error
-}
-
-func (c *MySQLStore) IsTokenExist(ts *model.StoreToken) bool {
-	tx := db.DB.Select("uuid").Where("uuid = ?", ts.UUID).First(&model.StoreToken{})
+func (c *MySQLStore) LoadSession(sessionID, sessionType string, sessionRaw any, username ...string) (*model.Session, bool) {
+	var session model.Session
+	tx := db.DB.Where("session_id = ? AND session_type = ?", sessionID, sessionType).First(&session)
 	if tx.RowsAffected == 0 {
-		return false
+		return nil, false
 	}
-	return true
+	if session.IsExpired() {
+		return nil, false
+	}
+	if sessionRaw == nil {
+		return nil, true
+	}
+	err := session.UnmarshalSessionRaw(sessionRaw)
+	if err != nil {
+		return nil, false
+	}
+	return &session, true
 }
 
-func (c *MySQLStore) StoreCode(code *model.OauthCode) error {
-	return db.DB.Create(code).Error
+func (c *MySQLStore) DeleteSession(sessionID, sessionType string, username ...string) error {
+	return db.DB.Where("session_id = ? AND session_type = ?", sessionID, sessionType).Delete(&model.Session{}).Error
 }
 
-func (c *MySQLStore) LoadCode(code, clientID string) (*model.OauthCode, error) {
-	var codeModel model.OauthCode
-	err := db.DB.Where("code = ? AND client_id = ?", code, clientID).First(&codeModel).Error
-	return &codeModel, err
-}
-
-func (c *MySQLStore) DeleteCode(code, clientID string) error {
-	return db.DB.Where("code = ? AND client_id = ?", code, clientID).Delete(&model.OauthCode{}).Error
+func (c *MySQLStore) DeleteSessions(sessionType, username string) error {
+	return db.DB.Where("session_type = ? AND session_id = ?", username, sessionType).Delete(&model.Session{}).Error
 }

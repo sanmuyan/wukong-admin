@@ -9,28 +9,28 @@ import (
 	"wukong/server/model"
 )
 
-func GetOauthAPPS(c *gin.Context) {
+func GetOauthApps(c *gin.Context) {
 	likeKeys := ""
 	mustKeys := []string{"name"}
-	oauthAPPS, err := svc.GetOauthAPPS(getQuery(c, likeKeys, mustKeys))
+	oauthApps, err := svc.GetOauthApps(getQuery(c, likeKeys, mustKeys))
 	if err != nil {
 		logrus.Errorf("获取 OAuth APP: %s", err.Err)
 		util.Respf().FailWithError(err).Response(util.GinRespf(c))
 	}
-	util.Respf().Ok().WithData(oauthAPPS).Response(util.GinRespf(c))
+	util.Respf().Ok().WithData(oauthApps).Response(util.GinRespf(c))
 }
 
-func CreateOauthAPP(c *gin.Context) {
-	var oauthAPP model.OauthAPP
-	if err := c.ShouldBindJSON(&oauthAPP); err != nil {
+func CreateOauthApp(c *gin.Context) {
+	var oauthApp model.OauthApp
+	if err := c.ShouldBindJSON(&oauthApp); err != nil {
 		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
-	if xutil.IsZero(oauthAPP.APPName, oauthAPP.ClientID, oauthAPP.ClientSecret) {
+	if xutil.IsZero(oauthApp.APPName) {
 		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
-	if err := svc.CreateOauthAPP(&oauthAPP); err != nil {
+	if err := svc.CreateOauthApp(&oauthApp); err != nil {
 		logrus.Errorf("创建 OAuth APP: %s", err.Err)
 		util.Respf().FailWithError(err).Response(util.GinRespf(c))
 		return
@@ -38,17 +38,17 @@ func CreateOauthAPP(c *gin.Context) {
 	util.Respf().Ok().Response(util.GinRespf(c))
 }
 
-func UpdateOauthAPP(c *gin.Context) {
-	var oauthAPP model.OauthAPP
-	if err := c.ShouldBindJSON(&oauthAPP); err != nil {
+func UpdateOauthApp(c *gin.Context) {
+	var oauthApp model.OauthApp
+	if err := c.ShouldBindJSON(&oauthApp); err != nil {
 		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
-	if xutil.IsZero(oauthAPP.APPName, oauthAPP.ClientID, oauthAPP.ClientSecret) {
+	if xutil.IsZero(oauthApp.APPName, oauthApp.ClientID, oauthApp.ClientSecret) {
 		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
-	if err := svc.UpdateOauthAPP(&oauthAPP); err != nil {
+	if err := svc.UpdateOauthApp(&oauthApp); err != nil {
 		logrus.Errorf("更新 OAuth APP: %s", err.Err)
 		util.Respf().FailWithError(err).Response(util.GinRespf(c))
 		return
@@ -56,17 +56,17 @@ func UpdateOauthAPP(c *gin.Context) {
 	util.Respf().Ok().Response(util.GinRespf(c))
 }
 
-func DeleteOauthAPP(c *gin.Context) {
-	var oauthAPP model.OauthAPP
-	if err := c.ShouldBindJSON(&oauthAPP); err != nil {
+func DeleteOauthApp(c *gin.Context) {
+	var oauthApp model.OauthApp
+	if err := c.ShouldBindJSON(&oauthApp); err != nil {
 		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
-	if xutil.IsZero(oauthAPP.ID) {
+	if xutil.IsZero(oauthApp.ID) {
 		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
-	if err := svc.DeleteOauthAPP(&oauthAPP); err != nil {
+	if err := svc.DeleteOauthApp(&oauthApp); err != nil {
 		logrus.Errorf("删除 OAuth APP: %s", err.Err)
 		util.Respf().FailWithError(err).Response(util.GinRespf(c))
 		return

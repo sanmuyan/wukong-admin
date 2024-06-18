@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/go-webauthn/webauthn/protocol"
+	"github.com/go-webauthn/webauthn/webauthn"
 	"time"
 )
 
@@ -17,23 +18,20 @@ type PassKey struct {
 }
 
 type PassKeyRegisterSession struct {
-	ID         int
-	UserID     int
-	SessionRaw string
-	ExpireAt   time.Time
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
+	SessionData webauthn.SessionData
+}
+
+type PassKeyBeginRegistrationResponse struct {
+	SessionID string                       `json:"session_id"`
+	Options   *protocol.CredentialCreation `json:"options"`
+}
+
+type PassKeyFinishRegistrationRequest struct {
+	SessionID string `form:"session_id" binding:"required"`
 }
 
 type PassKeyLoginSession struct {
-	ID         int
-	UserID     int
-	Username   string
-	SessionID  string
-	SessionRaw string
-	ExpireAt   time.Time
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
+	SessionData webauthn.SessionData
 }
 
 type PassKeyBeginLoginRequest struct {
@@ -41,12 +39,10 @@ type PassKeyBeginLoginRequest struct {
 }
 
 type PassKeyBeginLoginResponse struct {
-	Username  string                        `json:"username"`
 	SessionID string                        `json:"session_id"`
 	Options   *protocol.CredentialAssertion `json:"options"`
 }
 
 type PassKeyFinishLoginRequest struct {
-	Username  string `form:"username" binding:"required"`
 	SessionID string `form:"session_id" binding:"required"`
 }

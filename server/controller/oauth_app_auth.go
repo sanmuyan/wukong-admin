@@ -11,13 +11,13 @@ import (
 	"wukong/server/model"
 )
 
-func GetOauthCodeFrontRedirect(c *gin.Context) {
-	var req model.OauthCodeRequest
+func GetOauthCodeSessionFrontRedirect(c *gin.Context) {
+	var req model.OauthCodeSessionRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		util.Respf().FailWithError(util.NewRespError(errors.New("invalid_request"), true), xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
-	redirectURI, _err := svc.GetOauthCode(keysToUserToken(c), &req)
+	redirectURI, _err := svc.GetOauthCodeSession(keysToUserToken(c), &req)
 	if _err != nil {
 		util.Respf().FailWithError(util.NewRespError(errors.New(_err.Error), true), xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
@@ -27,8 +27,8 @@ func GetOauthCodeFrontRedirect(c *gin.Context) {
 	util.Respf().Ok().WithData(data).Response(util.GinRespf(c))
 }
 
-func GetOauthCode(c *gin.Context) {
-	var req model.OauthCodeRequest
+func GetOauthCodeSession(c *gin.Context) {
+	var req model.OauthCodeSessionRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
 		c.JSON(200, model.NewOauthErrorResponse("invalid_request"))
 		return
@@ -38,7 +38,7 @@ func GetOauthCode(c *gin.Context) {
 		c.Redirect(302, fmt.Sprintf("%s%s", config.Conf.App.OauthLoginRedirectURL, c.Request.URL.String()))
 		return
 	}
-	redirectURI, _err := svc.GetOauthCode(&token, &req)
+	redirectURI, _err := svc.GetOauthCodeSession(&token, &req)
 	if _err != nil {
 		c.JSON(200, _err)
 		return

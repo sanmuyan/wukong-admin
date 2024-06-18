@@ -8,6 +8,7 @@ import (
 	"github.com/sanmuyan/xpkg/xutil"
 	"time"
 	"wukong/pkg/config"
+	"wukong/pkg/datastore"
 	"wukong/pkg/db"
 	"wukong/pkg/util"
 	"wukong/server/model"
@@ -24,18 +25,16 @@ func (s *Service) GetMFAAppStatus(token *model.Token) (any, util.RespError) {
 }
 
 func (s *Service) MFAAppBeginBind(token *model.Token) (*model.MFAAppBindResponse, util.RespError) {
-	db.DB.Where("user_id = ?", token.GetUserID()).Delete(&model.MFAAppBindSession{})
 	totpSecret := xutil.RemoveError(xmfa.GenerateTOTPSecret(config.TOTPSecretLength))
-	mfaBindSession := model.MFAAppBindSession{
-		UserID:     token.GetUserID(),
+	sessionID := util.GetRandomID()
+	err := datastore.DS.StoreSession(model.NewSession(sessionID, model.SessionTypeMFAAppBind, token.GetUserID(), token.Username, &model.MFAAppBindSession{
 		TOTPSecret: totpSecret,
-		ExpireAt:   time.Now().UTC().Add(config.MFABindTimeoutMin * time.Minute),
-	}
-	err := db.DB.Create(&mfaBindSession).Error
+	}).SetTimeout(config.MFABindTimeoutMin * time.Minute))
 	if err != nil {
 		return nil, util.NewRespError(err)
 	}
 	return &model.MFAAppBindResponse{
+		SessionID:  sessionID,
 		TOTPSecret: totpSecret,
 		QRCodeURI:  fmt.Sprintf("otpauth://totp/%s:%s?secret=%s", config.Conf.AppName, token.Username, totpSecret),
 		TimeoutMin: config.MFABindTimeoutMin,
@@ -44,21 +43,21 @@ func (s *Service) MFAAppBeginBind(token *model.Token) (*model.MFAAppBindResponse
 
 func (s *Service) MFAAppFinishBind(req *model.MFAAppBindRequest, token *model.Token) util.RespError {
 	var mfaBindSession model.MFAAppBindSession
-	tx := db.DB.Where("user_id = ? AND totp_secret = ?", token.GetUserID(), req.TOTPSecret).First(&mfaBindSession)
-	if tx.RowsAffected == 0 {
-		return util.NewRespError(errors.New("绑定错误"), true).WithCode(xresponse.HttpBadRequest)
-	}
-	if mfaBindSession.ExpireAt.Before(time.Now().UTC()) {
+	_, ok := datastore.DS.LoadSession(req.SessionID, model.SessionTypeMFAAppBind, &mfaBindSession)
+	if !ok {
 		return util.NewRespError(errors.New("绑定超时"), true).WithCode(xresponse.HttpBadRequest)
 	}
+	defer func() {
+		_ = datastore.DS.DeleteSession(req.SessionID, model.SessionTypeMFAAppBind)
+	}()
 	if req.TOTPCode != xutil.RemoveError(xmfa.GetTOTPToken(mfaBindSession.TOTPSecret, config.TOTPTokenInterval)) {
 		return util.NewRespError(errors.New("验证码错误"), true).WithCode(xresponse.HttpBadRequest)
 	}
-	mfa := model.MFAApp{
+	mfaApp := model.MFAApp{
 		UserID:     token.GetUserID(),
 		TOTPSecret: mfaBindSession.TOTPSecret,
 	}
-	if err := db.DB.Create(&mfa).Error; err != nil {
+	if err := db.DB.Create(&mfaApp).Error; err != nil {
 		return util.NewRespError(err)
 	}
 	return nil

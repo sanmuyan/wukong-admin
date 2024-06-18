@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-type OauthAPP struct {
+type OauthApp struct {
 	ID           int       `json:"id"`
 	APPName      string    `json:"app_name"`
 	ClientID     string    `json:"client_id" gorm:"<-:create"`

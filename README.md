@@ -76,16 +76,35 @@ server {
 
 先导入测试数据
 ```sql
-INSERT INTO `wukong`.`resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/user', 1, '用户');
-INSERT INTO `wukong`.`resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/profile', -1, '用户个人信息');
-INSERT INTO `wukong`.`resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/logout', -1, '退出登录');
+INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/user', 1, '用户管理');
+INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/account', -1, '个人账号');
+INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/logout', -1, '退出登录');
+INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/oauth/authorize', -1, 'OAuth 登录');
+INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/account/profile', -1, '账号资料');
+INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/account/mfaAppStatus', -1, 'MFA 应用');
+INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/account/mfaAppBeginBind', -1, 'MFA 应用');
+INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/account/mfaAppFinishBind', -1, 'MFA 应用');
+INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/account/mfaApp', -1, 'MFA 应用');
+INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/account/passKey', -1, '通行密钥');
+INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/account/passKeyBeginRegistration', -1, '通行密钥');
+INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/account/passKeyFinishRegistration', -1, '通行密钥');
+INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/account/modifyPassword', -1, '修改密码');
+INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/role', 1, '角色');
+INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/resource', 1, '权限资源');
+INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/roleBind', 1, '角色绑定资源');
+INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/userBind', 1, '用户绑定角色');
+INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/token', 1, '用户 Token');
+INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/ldap/user/sync', 1, '同步 LDAP 用户');
+INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/oauth/authorize/frontRedirect', -1, '应用登录');
+INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/app/oauth', 1, 'OAuth 应用');
+INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/logout/all', -1, '退出全部会话');
 
-INSERT INTO `wukong`.`roles`(`id`, `role_name`, `access_level`, `comment`) VALUES (1, 'base', 1, '基本用户');
-INSERT INTO `wukong`.`rbac_roles`(`id`, `role_name`, `access_level`, `comment`) VALUES (2, 'admin', 100, '管理员');
+INSERT INTO `roles`(`id`, `role_name`, `access_level`, `comment`) VALUES (1, 'base', 1, '基本用户');
+INSERT INTO `roles`(`id`, `role_name`, `access_level`, `comment`) VALUES (2, 'admin', 100, '管理员');
 
-INSERT INTO `wukong`.`users`(`id`, `username`, `display_name`, `email`, `mobile`, `password`, `source`, `is_active`) VALUES (1, 'admin', '管理员', 'admin@qq.com', '13888888888', '$2a$04$WXVJ91k1yjGecUgfBgC3COnKstE.h4fdjV0bRc0TUpS4OoAAY0/7K', 'local', 1);
+INSERT INTO `users`(`id`, `username`, `display_name`, `email`, `mobile`, `password`, `source`, `is_active`) VALUES (1, 'admin', '管理员', 'admin@qq.com', '13888888888', '$2a$04$WXVJ91k1yjGecUgfBgC3COnKstE.h4fdjV0bRc0TUpS4OoAAY0/7K', 'local', 1);
 
 
-INSERT INTO `wukong`.`user_binds`(`role_id`, `user_id`) VALUES (1, 1);
+INSERT INTO `user_binds`(`role_id`, `user_id`) VALUES (1, 1);
 ```
 http://localhost

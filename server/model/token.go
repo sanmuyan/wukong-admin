@@ -2,14 +2,14 @@ package model
 
 import (
 	"errors"
+	"fmt"
 	"github.com/sanmuyan/xpkg/xutil"
-	"time"
 	"wukong/pkg/config"
 )
 
 type Token struct {
 	userID      int
-	UUID        string `json:"uuid"`
+	TokenID     string `json:"token_id"`
 	Username    string `json:"username" binding:"required"`
 	AccessLevel int    `json:"access_level,omitempty"`
 	TokenType   string `json:"token_type" binding:"required"`
@@ -29,18 +29,17 @@ func (t *Token) GetUserID() int {
 }
 
 func (t *Token) Valid() error {
-	err := errors.New("token is not required")
 	if t.Issuer != config.Conf.AppName {
-		return err
+		return errors.New("token is not required, issuer is not " + config.Conf.AppName)
 	}
 	if xutil.IsZero(t.Username, t.TokenType) {
-		return err
+		return errors.New("token is not required, username or token_type is empty")
 	}
 	if _, ok := TokenTypes[t.TokenType]; !ok {
-		return err
+		return errors.New("invalid token type")
 	}
-	if t.TokenType != ApiToken && t.ExpiresAt == nil {
-		return err
+	if t.TokenType != TokenTypeApi && t.ExpiresAt == nil {
+		return errors.New("token is not required, expires_at is empty")
 	}
 	return nil
 }
@@ -48,42 +47,33 @@ func (t *Token) Valid() error {
 var TokenTypes = map[string]struct{}{}
 
 const (
-	SessionToken      = "session"
-	ApiToken          = "api"
-	OauthAccessToken  = "oauth_access_token"
-	OauthRefreshToken = "oauth_refresh_token"
+	TokenTypeSession      = "session_token"
+	TokenTypeApi          = "api_token"
+	TokenTypeOauthAccess  = "oauth_access_token"
+	TokenTypeOauthRefresh = "oauth_refresh_token"
 )
 
 func init() {
-	TokenTypes[SessionToken] = struct{}{}
-	TokenTypes[ApiToken] = struct{}{}
-	TokenTypes[OauthAccessToken] = struct{}{}
-	TokenTypes[OauthRefreshToken] = struct{}{}
+	TokenTypes[TokenTypeSession] = struct{}{}
+	TokenTypes[TokenTypeApi] = struct{}{}
+	TokenTypes[TokenTypeOauthAccess] = struct{}{}
+	TokenTypes[TokenTypeOauthRefresh] = struct{}{}
 }
 
-type StoreToken struct {
-	UUID      string     `gorm:"<-:create"`
-	Username  string     `gorm:"<-:create"`
-	TokenType string     `gorm:"<-:create"`
-	TokenStr  string     `gorm:"<-:create"`
-	ExpiresAt *time.Time `gorm:"<-:create"`
-	CreatedAt time.Time  `gorm:"<-:create"`
-	UpdatedAt time.Time
+type TokenSession struct {
+	TokenType string `json:"token_type"`
+	TokenStr  string `json:"token_str"`
 }
 
-func NewTokenStore(token *Token) *StoreToken {
-	return &StoreToken{UUID: token.UUID, TokenType: token.TokenType, Username: token.Username}
+func NewTokenSession(token *Token) *TokenSession {
+	return &TokenSession{TokenType: token.TokenType}
 }
 
-func (c *StoreToken) WithTokenStr(tokenStr string) *StoreToken {
+func (c *TokenSession) WithTokenStr(tokenStr string) *TokenSession {
 	c.TokenStr = tokenStr
 	return c
 }
 
-func (c *StoreToken) WithExpiresAt(expiresAt *int64) *StoreToken {
-	if expiresAt == nil {
-		return c
-	}
-	c.ExpiresAt = xutil.PtrTo[time.Time](time.Unix(*expiresAt, 0).UTC())
-	return c
+func (c *TokenSession) GenerateCustomIndex(token *Token) string {
+	return fmt.Sprintf("%s:%s", token.Username, token.TokenType)
 }

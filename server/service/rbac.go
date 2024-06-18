@@ -71,18 +71,18 @@ func (s *Service) GetMaxAccessLevel(roles []model.Role) int {
 }
 
 func (s *Service) IsAccessResource(token *model.Token, c *gin.Context) bool {
-	var user model.User
-	if err := db.DB.Where(&model.User{Username: token.Username}).First(&user).Error; err != nil {
-		return false
-	}
-	token.SetUserID(user.ID)
+	//var user model.User
+	//if err := db.DB.Where(&model.User{Username: token.Username}).First(&user).Error; err != nil {
+	//	return false
+	//}
+	//if user.IsActive != 1 {
+	//	return false
+	//}
+	//token.SetUserID(user.ID)
 	routePath := c.FullPath()
-	if user.IsActive != 1 {
-		return false
-	}
 
 	// 处理 Oauth refreshToken
-	if token.TokenType == model.OauthRefreshToken {
+	if token.TokenType == model.TokenTypeOauthRefresh {
 		if routePath == "/api/oauth/token" {
 			return true
 		}
@@ -90,9 +90,9 @@ func (s *Service) IsAccessResource(token *model.Token, c *gin.Context) bool {
 	}
 
 	// 处理 OAuth accessToken
-	if token.TokenType == model.OauthAccessToken {
+	if token.TokenType == model.TokenTypeOauthAccess {
 		scope := strings.Split(token.Scope, ",")
-		if xutil.IsContains("profile", scope) && routePath == "/api/profile" {
+		if xutil.IsContains("profile", scope) && routePath == "/api/account/profile" {
 			return true
 		}
 		if !xutil.IsContains("api", scope) {

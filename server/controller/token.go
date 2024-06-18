@@ -28,7 +28,7 @@ func CreateToken(c *gin.Context) {
 	util.Respf().WithData(tokenStr).Ok().Response(util.GinRespf(c))
 }
 
-func DeleteToken(c *gin.Context) {
+func DeleteTokenSession(c *gin.Context) {
 	var token model.Token
 	if err := c.ShouldBindJSON(&token); err != nil {
 		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
@@ -38,7 +38,7 @@ func DeleteToken(c *gin.Context) {
 		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
-	if err := svc.DeleteToken(&token); err != nil {
+	if err := svc.DeleteTokenSession(&token); err != nil {
 		logrus.Errorf("删除token: %s", err)
 		util.Respf().FailWithError(util.NewRespError(err)).Response(util.GinRespf(c))
 		return

@@ -1,18 +1,11 @@
 package model
 
-import "time"
-
-type OauthCode struct {
-	ID           int
-	Code         string
-	Username     string
-	ClientID     string
-	ClientSecret string
-	RedirectURI  string
-	Scope        string
-	ExpiresAt    time.Time
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+type OauthCodeSession struct {
+	Code         string `json:"code"`
+	ClientID     string `json:"client_id"`
+	ClientSecret string `json:"client_secret,omitempty"`
+	RedirectURI  string `json:"redirect_uri,omitempty"`
+	Scope        string `json:"scope,omitempty"`
 }
 
 type OauthTokenResponse struct {
@@ -22,7 +15,7 @@ type OauthTokenResponse struct {
 	TokenType    string `json:"token_type"`
 }
 
-type OauthCodeRequest struct {
+type OauthCodeSessionRequest struct {
 	ResponseType string `form:"response_type" binding:"required"`
 	ClientID     string `form:"client_id" binding:"required"`
 	RedirectURI  string `form:"redirect_uri"`

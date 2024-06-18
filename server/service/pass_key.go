@@ -7,12 +7,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/protocol/webauthncose"
-	"github.com/go-webauthn/webauthn/webauthn"
-	"github.com/google/uuid"
 	"github.com/sanmuyan/xpkg/xresponse"
 	"github.com/sanmuyan/xpkg/xutil"
 	"time"
 	"wukong/pkg/config"
+	"wukong/pkg/datastore"
 	"wukong/pkg/db"
 	"wukong/pkg/passkey"
 	"wukong/pkg/util"
@@ -53,8 +52,7 @@ func (s *Service) DeletePassKey(passKey *model.PassKey, token *model.Token) util
 	return nil
 }
 
-func (s *Service) PassKeyBeginRegistration(token *model.Token) (*protocol.CredentialCreation, util.RespError) {
-	db.DB.Where("user_id = ?", token.GetUserID()).Delete(&model.PassKeyRegisterSession{})
+func (s *Service) PassKeyBeginRegistration(token *model.Token) (*model.PassKeyBeginRegistrationResponse, util.RespError) {
 	var passKeyCount int64
 	db.DB.Model(&model.PassKey{}).Where("user_id = ?", token.GetUserID()).Count(&passKeyCount)
 	if passKeyCount >= config.PassKeyMax {
@@ -73,27 +71,31 @@ func (s *Service) PassKeyBeginRegistration(token *model.Token) (*protocol.Creden
 	if err != nil {
 		return nil, util.NewRespError(err)
 	}
-	db.DB.Create(&model.PassKeyRegisterSession{
-		UserID:     token.GetUserID(),
-		SessionRaw: string(xutil.RemoveError(json.Marshal(session))),
-		ExpireAt:   time.Now().UTC().Add(config.PassKeyRegistrationTimeoutMin * time.Minute),
-	})
-	return options, nil
+	sessionID := util.GetRandomID()
+	err = datastore.DS.StoreSession(model.NewSession(sessionID, model.SessionTypePassKeyRegister, token.GetUserID(), token.Username, &model.PassKeyRegisterSession{
+		SessionData: *session,
+	}).SetTimeout(config.PassKeyRegistrationTimeoutMin * time.Minute))
+	if err != nil {
+		return nil, util.NewRespError(err)
+	}
+	return &model.PassKeyBeginRegistrationResponse{
+		SessionID: sessionID,
+		Options:   options,
+	}, nil
 }
 
-func (s *Service) PassKeyFinishRegistration(token *model.Token, c *gin.Context) util.RespError {
+func (s *Service) PassKeyFinishRegistration(req *model.PassKeyFinishRegistrationRequest, token *model.Token, c *gin.Context) util.RespError {
 	var user model.User
 	db.DB.First(&user, token.GetUserID())
 	var passKeySession model.PassKeyRegisterSession
-	db.DB.Where("user_id = ?", token.GetUserID()).First(&passKeySession)
-	if passKeySession.ExpireAt.Before(time.Now().UTC()) {
+	_, ok := datastore.DS.LoadSession(req.SessionID, model.SessionTypePassKeyRegister, &passKeySession)
+	if !ok {
 		return util.NewRespError(errors.New("注册超时"), true).WithCode(xresponse.HttpBadRequest)
 	}
-	var session webauthn.SessionData
-	if err := json.Unmarshal([]byte(passKeySession.SessionRaw), &session); err != nil {
-		return util.NewRespError(err)
-	}
-	credential, err := passkey.WebAuthn.FinishRegistration(passkey.NewWAUser(&user), session, c.Request)
+	defer func() {
+		_ = datastore.DS.DeleteSession(req.SessionID, model.SessionTypePassKeyRegister)
+	}()
+	credential, err := passkey.WebAuthn.FinishRegistration(passkey.NewWAUser(&user), passKeySession.SessionData, c.Request)
 	if err != nil {
 		return util.NewRespError(err)
 	}
@@ -109,56 +111,46 @@ func (s *Service) PassKeyFinishRegistration(token *model.Token, c *gin.Context) 
 }
 
 func (s *Service) BeginPassKeyLogin(req *model.PassKeyBeginLoginRequest) (*model.PassKeyBeginLoginResponse, util.RespError) {
-	db.DB.Where("username = ?", req.Username).Delete(&model.PassKeyLoginSession{})
 	var user model.User
-	tx := db.DB.Where("username = ?", req.Username).First(&user)
+	tx := db.DB.Select("id,username").Where("username = ?", req.Username).First(&user)
 	if tx.RowsAffected == 0 {
-		return nil, util.NewRespError(errors.New("用户不存在"), true).WithCode(xresponse.HttpBadRequest)
+		return nil, util.NewRespError(errors.New("用户不存在")).WithCode(xresponse.HttpBadRequest)
 	}
 	options, session, err := passkey.WebAuthn.BeginLogin(passkey.NewWAUser(&user))
 	if err != nil {
 		return nil, util.NewRespError(err).WithCode(xresponse.HttpBadRequest)
 	}
-	sessionID := uuid.New().String()
-	err = db.DB.Create(&model.PassKeyLoginSession{
-		Username:   req.Username,
-		UserID:     user.ID,
-		SessionID:  sessionID,
-		SessionRaw: string(xutil.RemoveError(json.Marshal(session))),
-		ExpireAt:   time.Now().UTC().Add(config.PassKeyLoginTimeoutMin * time.Minute),
-	}).Error
+	sessionID := util.GetRandomID()
+	err = datastore.DS.StoreSession(model.NewSession(sessionID, model.SessionTypePassKeyLogin, user.ID, user.Username,
+		&model.PassKeyLoginSession{
+			SessionData: *session,
+		}).SetTimeout(config.PassKeyLoginTimeoutMin * time.Minute))
 	if err != nil {
 		return nil, util.NewRespError(err)
 	}
 	return &model.PassKeyBeginLoginResponse{
-		Username:  req.Username,
 		SessionID: sessionID,
 		Options:   options,
 	}, nil
 }
 
 func (s *Service) FinishPassKeyLogin(req *model.PassKeyFinishLoginRequest, c *gin.Context) (*model.LoginResponse, util.RespError) {
-	var user model.User
-	tx := db.DB.Where("username = ?", req.Username).First(&user)
-	if tx.RowsAffected == 0 {
-		return nil, util.NewRespError(errors.New("用户不存在"))
-	}
 	var passKeyLoginSession model.PassKeyLoginSession
-	tx = db.DB.Where("username = ? AND session_id = ?", req.Username, req.SessionID).First(&passKeyLoginSession)
-	if tx.RowsAffected == 0 {
-		return nil, util.NewRespError(errors.New("未知 session"))
-	}
-	if passKeyLoginSession.ExpireAt.Before(time.Now().UTC()) {
+	session, ok := datastore.DS.LoadSession(req.SessionID, model.SessionTypePassKeyLogin, &passKeyLoginSession)
+	if !ok {
 		return nil, util.NewRespError(errors.New("登录超时"), true)
 	}
-	var session webauthn.SessionData
-	if err := json.Unmarshal([]byte(passKeyLoginSession.SessionRaw), &session); err != nil {
-		return nil, util.NewRespError(err)
+	defer func() {
+		_ = datastore.DS.DeleteSession(req.SessionID, model.SessionTypePassKeyLogin)
+	}()
+	user := model.User{
+		ID:       session.UserID,
+		Username: session.Username,
 	}
-	credential, err := passkey.WebAuthn.FinishLogin(passkey.NewWAUser(&user), session, c.Request)
+	credential, err := passkey.WebAuthn.FinishLogin(passkey.NewWAUser(&user), passKeyLoginSession.SessionData, c.Request)
 	if err != nil {
 		return nil, util.NewRespError(err)
 	}
-	db.DB.Model(&model.PassKey{}).Where("user_id = ? AND credential_id = ?", user.ID, base64.RawURLEncoding.EncodeToString(credential.ID)).Update("last_used_at", time.Now().UTC())
+	go db.DB.Model(&model.PassKey{}).Where("user_id = ? AND credential_id = ?", user.ID, base64.RawURLEncoding.EncodeToString(credential.ID)).Update("last_used_at", time.Now().UTC())
 	return s.createLoginToken(user.ID, user.Username)
 }

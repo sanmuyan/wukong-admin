@@ -5,6 +5,7 @@ import (
 	"github.com/sanmuyan/xpkg/xbcrypt"
 	"github.com/sanmuyan/xpkg/xresponse"
 	"github.com/sanmuyan/xpkg/xutil"
+	"wukong/pkg/config"
 	"wukong/pkg/db"
 	"wukong/pkg/util"
 	"wukong/server/model"
@@ -26,7 +27,7 @@ func (s *Service) CreateUser(user *model.User) util.RespError {
 	if !xutil.IsUsername(user.Username) {
 		return util.NewRespError(errors.New("用户名不符合要求"), true).WithCode(xresponse.HttpBadRequest)
 	}
-	if !xbcrypt.IsPasswordComplexity(user.Password, 8, true, true, true, true) {
+	if !xbcrypt.IsPasswordComplexity(user.Password, config.PasswordMinLength, config.PasswordMinIncludeCase) {
 		return util.NewRespError(errors.New("密码不符合要求"), true).WithCode(xresponse.HttpBadRequest)
 	}
 	tx := db.DB.Select("id").Where(&model.User{Username: user.Username}).First(&model.User{})
@@ -43,13 +44,13 @@ func (s *Service) CreateUser(user *model.User) util.RespError {
 }
 
 func (s *Service) UpdateUser(user *model.User) util.RespError {
-	if len(user.Password) > 0 {
-		if !xbcrypt.IsPasswordComplexity(user.Password, 8, true, true, true, true) {
-			return util.NewRespError(errors.New("密码不符合要求"), true).WithCode(xresponse.HttpBadRequest)
-		}
-		user.Password = xbcrypt.CreatePassword(user.Password)
+	_user := &model.User{
+		ID:          user.ID,
+		Email:       user.Email,
+		Mobile:      user.Mobile,
+		DisplayName: user.DisplayName,
 	}
-	if err := db.DB.Updates(&user).Error; err != nil {
+	if err := db.DB.Updates(_user).Error; err != nil {
 		return util.NewRespError(err)
 	}
 	return nil

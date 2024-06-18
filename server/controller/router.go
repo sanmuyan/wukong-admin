@@ -20,25 +20,26 @@ func router(r *gin.Engine) {
 	apiGroup.Use(middleware.AccessControl())
 	{
 		apiGroup.POST("/logout", Logout)
+		apiGroup.POST("/logout/all", LogoutAll)
 
 		apiGroup.GET("/user", GetUsers)
 		apiGroup.POST("/user", CreateUser)
 		apiGroup.PUT("/user", UpdateUser)
 		apiGroup.DELETE("/user", DeleteUser)
 
-		apiGroup.GET("/profile", GetProfile)
-		apiGroup.PUT("/profile", UpdateProfile)
+		apiGroup.GET("/account/profile", GetProfile)
+		apiGroup.PUT("/account/profile", UpdateProfile)
 
-		apiGroup.GET("/profile/mfaAppStatus", GetMFAAppStatus)
-		apiGroup.GET("/profile/mfaAppBeginBind", MFAAppBeginBind)
-		apiGroup.POST("/profile/mfaAppFinishBind", MFAppFinishBind)
-		apiGroup.DELETE("/profile/mfaApp", DeleteMFAApp)
-
-		apiGroup.GET("/profile/passKeys", GetPassKeys)
-		apiGroup.PUT("/profile/passKey", UpdatePassKey)
-		apiGroup.DELETE("/profile/passKey", DeletePassKey)
-		apiGroup.GET("/profile/passKeyBeginRegistration", PassKeyBeginRegistration)
-		apiGroup.POST("/profile/passKeyFinishRegistration", PassKeyFinishRegistration)
+		apiGroup.GET("/account/mfaAppStatus", GetMFAAppStatus)
+		apiGroup.GET("/account/mfaAppBeginBind", MFAAppBeginBind)
+		apiGroup.POST("/account/mfaAppFinishBind", MFAppFinishBind)
+		apiGroup.DELETE("/account/mfaApp", DeleteMFAApp)
+		apiGroup.GET("/account/passKey", GetPassKeys)
+		apiGroup.PUT("/account/passKey", UpdatePassKey)
+		apiGroup.DELETE("/account/passKey", DeletePassKey)
+		apiGroup.GET("/account/passKeyBeginRegistration", PassKeyBeginRegistration)
+		apiGroup.POST("/account/passKeyFinishRegistration", PassKeyFinishRegistration)
+		apiGroup.POST("/account/modifyPassword", ModifyPassword)
 
 		apiGroup.GET("/role", GetRoles)
 		apiGroup.POST("/role", CreateRole)
@@ -59,16 +60,16 @@ func router(r *gin.Engine) {
 		apiGroup.DELETE("/userBind", DeleteUserBinds)
 
 		apiGroup.POST("/token", CreateToken)
-		apiGroup.DELETE("/token", DeleteToken)
+		apiGroup.DELETE("/token", DeleteTokenSession)
 
 		apiGroup.PUT("/ldap/user/sync", SyncLDAPUsers)
 
-		apiGroup.GET("/oauth/authorize/frontRedirect", GetOauthCodeFrontRedirect)
+		apiGroup.GET("/oauth/authorize/frontRedirect", GetOauthCodeSessionFrontRedirect)
 
-		apiGroup.GET("/oauth/app", GetOauthAPPS)
-		apiGroup.POST("/oauth/app", CreateOauthAPP)
-		apiGroup.PUT("/oauth/app", UpdateOauthAPP)
-		apiGroup.DELETE("/oauth/app", DeleteOauthAPP)
+		apiGroup.GET("/app/oauth", GetOauthApps)
+		apiGroup.POST("/app/oauth", CreateOauthApp)
+		apiGroup.PUT("/app/oauth", UpdateOauthApp)
+		apiGroup.DELETE("/app/oauth", DeleteOauthApp)
 
 	}
 	r.POST("/api/login", Login)
@@ -79,5 +80,5 @@ func router(r *gin.Engine) {
 	r.GET("/api/oauth/callback", OauthCallback)
 	r.POST("/api/oauth/token", GetOauthToken)
 	r.POST("/api/oauth/revoke", RevokeOauthToken)
-	r.GET("/api/oauth/authorize", GetOauthCode)
+	r.GET("/api/oauth/authorize", GetOauthCodeSession)
 }

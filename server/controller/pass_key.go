@@ -72,7 +72,12 @@ func PassKeyBeginRegistration(c *gin.Context) {
 }
 
 func PassKeyFinishRegistration(c *gin.Context) {
-	err := svc.PassKeyFinishRegistration(keysToUserToken(c), c)
+	var req model.PassKeyFinishRegistrationRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
+		return
+	}
+	err := svc.PassKeyFinishRegistration(&req, keysToUserToken(c), c)
 	if err != nil {
 		logrus.Errorf("PassKey 完成注册错误: %s", err.Err)
 		util.Respf().FailWithError(err).Response(util.GinRespf(c))

@@ -8,6 +8,7 @@ import (
 	"time"
 	"wukong/pkg/config"
 	"wukong/pkg/datastore"
+	"wukong/pkg/db"
 	"wukong/server/model"
 )
 
@@ -24,9 +25,17 @@ func ValidToken(tokenStr string) (token model.Token, err error) {
 			return token, errors.New("令牌已过期")
 		}
 	}
-	if !config.Conf.DisableVerifyServerToken && !datastore.DS.IsTokenExist(model.NewTokenStore(&token)) {
-		return token, errors.New("服务器令牌已过期")
+	if !config.Conf.DisableVerifyServerToken {
+		if _, ok := datastore.DS.LoadSession(token.TokenID, token.TokenType, token.Username); !ok {
+			return token, errors.New("服务器令牌已过期")
+		}
 	}
+	var user model.User
+	db.DB.Select("id,is_active").Where("username", token.Username).First(&user)
+	if user.ID == 0 || user.IsActive != 1 {
+		return token, errors.New("用户不存在或未激活")
+	}
+	token.SetUserID(user.ID)
 	return token, nil
 }
 

@@ -1,20 +1,11 @@
 package model
 
-import "time"
-
 const (
 	MFAProviderMFAApp = "mfa_app"
 )
 
 type MFALoginSession struct {
-	ID          int
-	UserID      int
-	Username    string
-	SessionID   string
-	MFAProvider string
-	ExpireAt    time.Time
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	MFAProvider string `json:"mfa_provider"`
 }
 
 type MFAFinishLoginRequest struct {
@@ -25,7 +16,7 @@ type MFAFinishLoginRequest struct {
 }
 
 type MFABeginLoginResponse struct {
-	Username    string `json:"username"`
 	SessionID   string `json:"session_id"`
+	Username    string `json:"username"`
 	MFAProvider string `json:"mfa_provider"`
 }

@@ -7,12 +7,10 @@ import (
 )
 
 type DataStore interface {
-	IsTokenExist(*model.StoreToken) bool
-	StoreToken(*model.StoreToken) error
-	DeleteToken(*model.StoreToken) error
-	StoreCode(code *model.OauthCode) error
-	LoadCode(string, string) (*model.OauthCode, error)
-	DeleteCode(string, string) error
+	StoreSession(s *model.Session, username ...string) error
+	LoadSession(sessionID, sessionType string, sessionRaw any, username ...string) (*model.Session, bool)
+	DeleteSession(sessionID, sessionType string, username ...string) error
+	DeleteSessions(sessionType, username string) error
 }
 
 var DS DataStore

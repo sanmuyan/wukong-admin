@@ -31,3 +31,13 @@ func Logout(c *gin.Context) {
 	}
 	util.Respf().Ok().Response(util.GinRespf(c))
 }
+
+func LogoutAll(c *gin.Context) {
+	err := svc.LogoutAll(keysToUserToken(c))
+	if err != nil {
+		logrus.Errorf("退出所有会话: %s", err.Err)
+		util.Respf().FailWithError(err).Response(util.GinRespf(c))
+		return
+	}
+	util.Respf().Ok().Response(util.GinRespf(c))
+}

@@ -6,6 +6,7 @@ import (
 	"github.com/sanmuyan/xpkg/xresponse"
 	"github.com/sanmuyan/xpkg/xutil"
 	"strings"
+	"wukong/pkg/config"
 	"wukong/pkg/db"
 	"wukong/pkg/util"
 	"wukong/server/model"
@@ -15,7 +16,7 @@ func (s *Service) UpdateProfile(user *model.User, token *model.Token) util.RespE
 	user.Username = ""
 	user.ID = token.GetUserID()
 	if len(user.Password) > 0 {
-		if !xbcrypt.IsPasswordComplexity(user.Password, 8, true, true, true, true) {
+		if !xbcrypt.IsPasswordComplexity(user.Password, config.PasswordMinLength, config.PasswordMinIncludeCase) {
 			return util.NewRespError(errors.New("密码格式不正确"), true).WithCode(xresponse.HttpBadRequest)
 		}
 		user.Password = xbcrypt.CreatePassword(user.Password)

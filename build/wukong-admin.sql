@@ -11,25 +11,25 @@
  Target Server Version : 80032 (8.0.32)
  File Encoding         : 65001
 
- Date: 15/06/2024 01:36:52
+ Date: 18/06/2024 18:00:24
 */
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------------
--- Table structure for mfa_app_bind_sessions
+-- Table structure for login_securities
 -- ----------------------------
-DROP TABLE IF EXISTS `mfa_app_bind_sessions`;
-CREATE TABLE `mfa_app_bind_sessions`  (
-                                          `id` int NOT NULL AUTO_INCREMENT,
-                                          `user_id` int NOT NULL,
-                                          `totp_secret` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-                                          `expire_at` datetime NOT NULL,
-                                          `updated_at` datetime NULL DEFAULT NULL,
-                                          `created_at` datetime NULL DEFAULT NULL,
-                                          PRIMARY KEY (`id`) USING BTREE,
-                                          UNIQUE INDEX `uq_index_totp_key`(`totp_secret` ASC) USING BTREE
+DROP TABLE IF EXISTS `login_securities`;
+CREATE TABLE `login_securities`  (
+                                     `id` int NOT NULL AUTO_INCREMENT,
+                                     `user_id` int NOT NULL,
+                                     `last_login_at` datetime NOT NULL,
+                                     `login_fail_count` int NULL DEFAULT NULL,
+                                     `lock_at` datetime NULL DEFAULT NULL,
+                                     `updated_at` datetime NULL DEFAULT NULL,
+                                     `created_at` datetime NULL DEFAULT NULL,
+                                     PRIMARY KEY (`id`) USING BTREE
 );
 
 -- ----------------------------
@@ -45,22 +45,6 @@ CREATE TABLE `mfa_apps`  (
                              PRIMARY KEY (`id`) USING BTREE,
                              UNIQUE INDEX `uq_index_totp_key`(`totp_secret` ASC) USING BTREE,
                              UNIQUE INDEX `uq_index_user_id`(`user_id` ASC) USING BTREE
-);
-
--- ----------------------------
--- Table structure for mfa_login_sessions
--- ----------------------------
-DROP TABLE IF EXISTS `mfa_login_sessions`;
-CREATE TABLE `mfa_login_sessions`  (
-                                       `id` int NOT NULL AUTO_INCREMENT,
-                                       `user_id` int NOT NULL,
-                                       `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-                                       `session_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-                                       `mfa_provider` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-                                       `expire_at` datetime NOT NULL,
-                                       `updated_at` datetime NULL DEFAULT NULL,
-                                       `created_at` datetime NULL DEFAULT NULL,
-                                       PRIMARY KEY (`id`) USING BTREE
 );
 
 -- ----------------------------
@@ -80,55 +64,6 @@ CREATE TABLE `oauth_apps`  (
                                PRIMARY KEY (`id`) USING BTREE,
                                UNIQUE INDEX `index_app_name`(`app_name` ASC) USING BTREE,
                                UNIQUE INDEX `index_client_id`(`client_id` ASC) USING BTREE
-);
-
--- ----------------------------
--- Table structure for oauth_codes
--- ----------------------------
-DROP TABLE IF EXISTS `oauth_codes`;
-CREATE TABLE `oauth_codes`  (
-                                `id` int NOT NULL,
-                                `code` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-                                `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-                                `client_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-                                `client_secret` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-                                `redirect_uri` varchar(1020) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-                                `scope` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-                                `expires_at` datetime NOT NULL,
-                                `created_at` datetime NULL DEFAULT NULL,
-                                `updated_at` datetime NULL DEFAULT NULL,
-                                PRIMARY KEY (`id`) USING BTREE,
-                                UNIQUE INDEX `uq_index_code_client_id`(`code` ASC, `client_id` ASC) USING BTREE
-);
-
--- ----------------------------
--- Table structure for pass_key_login_sessions
--- ----------------------------
-DROP TABLE IF EXISTS `pass_key_login_sessions`;
-CREATE TABLE `pass_key_login_sessions`  (
-                                            `id` int NOT NULL AUTO_INCREMENT,
-                                            `user_id` int NOT NULL,
-                                            `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-                                            `session_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-                                            `session_raw` varchar(1020) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-                                            `expire_at` datetime NOT NULL,
-                                            `updated_at` datetime NULL DEFAULT NULL,
-                                            `created_at` datetime NULL DEFAULT NULL,
-                                            PRIMARY KEY (`id`) USING BTREE
-);
-
--- ----------------------------
--- Table structure for pass_key_register_sessions
--- ----------------------------
-DROP TABLE IF EXISTS `pass_key_register_sessions`;
-CREATE TABLE `pass_key_register_sessions`  (
-                                               `id` int NOT NULL AUTO_INCREMENT,
-                                               `user_id` int NOT NULL,
-                                               `session_raw` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-                                               `expire_at` datetime NOT NULL,
-                                               `updated_at` datetime NULL DEFAULT NULL,
-                                               `created_at` datetime NULL DEFAULT NULL,
-                                               PRIMARY KEY (`id`) USING BTREE
 );
 
 -- ----------------------------
@@ -196,18 +131,18 @@ CREATE TABLE `roles`  (
 );
 
 -- ----------------------------
--- Table structure for store_tokens
+-- Table structure for sessions
 -- ----------------------------
-DROP TABLE IF EXISTS `store_tokens`;
-CREATE TABLE `store_tokens`  (
-                                 `uuid` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-                                 `token_type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-                                 `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-                                 `token_str` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-                                 `expires_at` datetime NULL DEFAULT NULL,
-                                 `created_at` datetime NULL DEFAULT NULL,
-                                 `updated_at` datetime NULL DEFAULT NULL,
-                                 PRIMARY KEY (`uuid`) USING BTREE
+DROP TABLE IF EXISTS `sessions`;
+CREATE TABLE `sessions`  (
+                             `session_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                             `session_type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                             `user_id` int NOT NULL,
+                             `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                             `session_raw` varchar(1020) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                             `expires_at` datetime NULL DEFAULT NULL,
+                             `created_at` datetime NULL DEFAULT NULL,
+                             PRIMARY KEY (`session_id`) USING BTREE
 );
 
 -- ----------------------------

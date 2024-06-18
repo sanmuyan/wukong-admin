@@ -52,7 +52,7 @@ func (s *Service) OauthCallback(code string, state string) (res *model.LoginResp
 	if user.ID == 0 || user.IsActive != 1 {
 		return nil, util.NewRespError(errors.New("用户已禁用"), true).WithCode(xresponse.HttpUnauthorized)
 	}
-	return s.login(&user)
+	return s.mfaLogin(&user)
 }
 
 func (s *Service) getOauthUser(conf *oauth2.Config, code string, state string, userInfoURL string) (useroauth.OauthProvider, error) {

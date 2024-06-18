@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/sanmuyan/xpkg/xjwt"
 	"github.com/sanmuyan/xpkg/xutil"
 	"strings"
@@ -10,40 +9,41 @@ import (
 	"wukong/pkg/config"
 	"wukong/pkg/datastore"
 	"wukong/pkg/db"
+	"wukong/pkg/util"
 	"wukong/server/model"
 )
 
-func (s *Service) GetOauthCode(token *model.Token, req *model.OauthCodeRequest) (string, *model.OauthErrorResponse) {
+func (s *Service) GetOauthCodeSession(token *model.Token, req *model.OauthCodeSessionRequest) (string, *model.OauthErrorResponse) {
 	var code string
-	var oauthAPP model.OauthAPP
+	var oauthApp model.OauthApp
 	if req.ResponseType != "code" {
 		return code, model.NewOauthErrorResponse("unsupported_response_type")
 	}
-	tx := db.DB.Where("client_id = ?", req.ClientID).First(&oauthAPP)
+	tx := db.DB.Where("client_id = ?", req.ClientID).First(&oauthApp)
 	if tx.RowsAffected == 0 {
 		return code, model.NewOauthErrorResponse("invalid_client_id")
 	}
-	if !xutil.IsContains(req.RedirectURI, strings.Split(oauthAPP.RedirectURI, ",")) {
+	if !xutil.IsContains(req.RedirectURI, strings.Split(oauthApp.RedirectURI, ",")) {
 		return code, model.NewOauthErrorResponse("invalid_redirect_uri")
 	}
-	appScopes := strings.Split(oauthAPP.Scope, ",")
+	appScopes := strings.Split(oauthApp.Scope, ",")
 	scopes := strings.Split(req.Scope, " ")
 	for _, _scope := range scopes {
 		if !xutil.IsContains(_scope, appScopes) {
 			return code, model.NewOauthErrorResponse("invalid_scope")
 		}
 	}
-	code = uuid.NewString()
-	oauthCode := model.OauthCode{
-		Code:         code,
-		Username:     token.Username,
+	sessionID := util.GetRandomID()
+	code = sessionID
+	oauthCode := model.OauthCodeSession{
+		Code:         sessionID,
 		ClientID:     req.ClientID,
-		ClientSecret: oauthAPP.ClientSecret,
+		ClientSecret: oauthApp.ClientSecret,
 		RedirectURI:  req.RedirectURI,
 		Scope:        strings.Replace(req.Scope, " ", ",", -1),
-		ExpiresAt:    time.Now().UTC().Add(5 * time.Minute),
 	}
-	err := datastore.DS.StoreCode(&oauthCode)
+	err := datastore.DS.StoreSession(model.NewSession(sessionID, model.SessionTypeOAuthCode, token.GetUserID(), token.Username,
+		&oauthCode).SetTimeout(config.OauthCodeTimeoutMin * time.Minute))
 	if err != nil {
 		return code, model.NewOauthErrorResponse("server_error")
 	}
@@ -57,40 +57,38 @@ func (s *Service) GetOauthToken(req *model.OauthTokenRequest) (*model.OauthToken
 	if req.GrantType != "authorization_code" {
 		return nil, model.NewOauthErrorResponse("unsupported_grant_type")
 	}
-	oauthCode, err := datastore.DS.LoadCode(req.Code, req.ClientID)
-	if err != nil {
+	var oauthCodeSession model.OauthCodeSession
+	session, ok := datastore.DS.LoadSession(req.Code, model.SessionTypeOAuthCode, &oauthCodeSession)
+	if !ok {
 		return nil, model.NewOauthErrorResponse("invalid_code")
 	}
 	defer func() {
-		_ = datastore.DS.DeleteCode(req.Code, req.ClientID)
+		_ = datastore.DS.DeleteSession(req.Code, model.SessionTypeOAuthCode)
 	}()
-	if oauthCode.ExpiresAt.Before(time.Now().UTC()) {
-		return nil, model.NewOauthErrorResponse("invalid_code")
-	}
-	if oauthCode.ClientID != req.ClientID {
+	if oauthCodeSession.ClientID != req.ClientID {
 		return nil, model.NewOauthErrorResponse("invalid_client")
 	}
-	if oauthCode.RedirectURI != req.RedirectURI {
+	if oauthCodeSession.RedirectURI != req.RedirectURI {
 		return nil, model.NewOauthErrorResponse("invalid_redirect_uri")
 	}
 	if req.ClientSecret != "" {
-		if req.ClientSecret != oauthCode.ClientSecret {
+		if req.ClientSecret != oauthCodeSession.ClientSecret {
 			return nil, model.NewOauthErrorResponse("invalid_client_secret")
 		}
 	}
-	oauthTokenResponse, err := s.createOauthToken(oauthCode)
+	oauthTokenResponse, err := s.createOauthToken(&oauthCodeSession, session.Username)
 	if err != nil {
 		return nil, model.NewOauthErrorResponse("server_error")
 	}
 	return oauthTokenResponse, nil
 }
 
-func (s *Service) createOauthToken(oauthCode *model.OauthCode) (*model.OauthTokenResponse, error) {
-	accessToken, err := s.createOrSetOauthToken(oauthCode.Username, model.OauthAccessToken, oauthCode.Scope, oauthCode.ClientID, config.AppAccessTokenExpiration)
+func (s *Service) createOauthToken(oauthCode *model.OauthCodeSession, username string) (*model.OauthTokenResponse, error) {
+	accessToken, err := s.createOrSetOauthToken(username, model.TokenTypeOauthAccess, oauthCode.Scope, oauthCode.ClientID, config.AppAccessTokenExpiration)
 	if err != nil {
 		return nil, err
 	}
-	refreshToken, err := s.createOrSetOauthToken(oauthCode.Username, model.OauthRefreshToken, oauthCode.Scope, oauthCode.ClientID, config.Conf.TokenTTL)
+	refreshToken, err := s.createOrSetOauthToken(username, model.TokenTypeOauthRefresh, oauthCode.Scope, oauthCode.ClientID, config.Conf.TokenTTL)
 	if err != nil {
 		return nil, err
 	}
@@ -118,18 +116,18 @@ func (s *Service) createOrSetOauthToken(username, tokenType, scope, clientID str
 }
 
 func (s *Service) validateOauthRefreshToken(refreshToken, clientID, clientSecret string) (*model.Token, *model.OauthErrorResponse) {
-	var oauthAPP model.OauthAPP
+	var oauthApp model.OauthApp
 	var token model.Token
 	_, err := xjwt.ParseToken(refreshToken, config.Conf.Secret.TokenKey, &token)
 	if err != nil {
 		return nil, model.NewOauthErrorResponse("invalid_token")
 	}
-	err = db.DB.Where("client_id = ?", clientID).First(&oauthAPP).Error
+	err = db.DB.Where("client_id = ?", clientID).First(&oauthApp).Error
 	if err != nil {
 		return nil, model.NewOauthErrorResponse("invalid_client")
 	}
 	if clientSecret != "" {
-		if clientSecret != oauthAPP.ClientSecret {
+		if clientSecret != oauthApp.ClientSecret {
 			return nil, model.NewOauthErrorResponse("invalid_client_secret")
 		}
 	}
@@ -144,10 +142,10 @@ func (s *Service) RefreshOauthToken(req *model.OauthTokenRequest) (*model.OauthT
 	if _err != nil {
 		return nil, _err
 	}
-	if token.TokenType != model.OauthRefreshToken {
+	if token.TokenType != model.TokenTypeOauthRefresh {
 		return nil, model.NewOauthErrorResponse("invalid_token")
 	}
-	accessToken, err := s.createOrSetOauthToken(token.Username, model.OauthAccessToken, token.Scope, req.ClientID, config.AppAccessTokenExpiration)
+	accessToken, err := s.createOrSetOauthToken(token.Username, model.TokenTypeOauthAccess, token.Scope, req.ClientID, config.AppAccessTokenExpiration)
 	if err != nil {
 		return nil, model.NewOauthErrorResponse("server_error")
 	}
@@ -163,17 +161,12 @@ func (s *Service) RevokeOauthToken(req *model.OauthRevokeTokenRequest) *model.Oa
 	if _err != nil {
 		return _err
 	}
-	if token.TokenType != model.OauthRefreshToken {
+	if token.TokenType != model.TokenTypeOauthRefresh {
 		return model.NewOauthErrorResponse("invalid_token")
 	}
-	err := datastore.DS.DeleteToken(model.NewTokenStore(token))
+	err := datastore.DS.DeleteSession(token.TokenID, token.TokenType, fmt.Sprintf("%s:%s:%s", token.TokenType, token.Username, token.TokenID))
 	if err != nil {
 		return model.NewOauthErrorResponse("server_error")
 	}
 	return nil
-}
-
-func (s *Service) generateOauthTokenID(token *model.Token) string {
-	return fmt.Sprintf("%s_app_%s", token.Username, token.ClientID)
-
 }

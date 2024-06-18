@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/sanmuyan/xpkg/xutil"
 	"time"
 	"wukong/pkg/config"
 	"wukong/pkg/db"
@@ -18,49 +19,66 @@ func NewRDBStore() *RDBStore {
 	return &RDBStore{ctx: context.Background()}
 }
 
-func (c *RDBStore) StoreToken(ts *model.StoreToken) error {
+func (c *RDBStore) StoreSession(s *model.Session, username ...string) error {
 	var expires time.Duration
-	if ts.ExpiresAt != nil {
-		expires = ts.ExpiresAt.Sub(time.Now().UTC())
+	if s.ExpiresAt != nil {
+		expires = s.ExpiresAt.Sub(time.Now().UTC())
 	}
-	return db.RDB.Set(c.ctx, c.generateTokenKey(ts), ts.TokenStr, expires).Err()
+	return db.RDB.Set(c.ctx, c.generateSessionPath(s.SessionType, s.SessionID, username...), xutil.RemoveError(json.Marshal(s)), expires).Err()
 }
 
-func (c *RDBStore) DeleteToken(ts *model.StoreToken) error {
-	return db.RDB.Del(c.ctx, c.generateTokenKey(ts)).Err()
-}
-
-func (c *RDBStore) IsTokenExist(ts *model.StoreToken) bool {
-	res, err := db.RDB.Exists(c.ctx, c.generateTokenKey(ts)).Result()
-	if err != nil || res == 0 {
-		return false
+func (c *RDBStore) LoadSession(sessionID, sessionType string, sessionRaw any, username ...string) (*model.Session, bool) {
+	res, _ := db.RDB.Exists(c.ctx, c.generateSessionPath(sessionType, sessionID, username...)).Result()
+	if res == 0 {
+		return nil, false
 	}
-	return false
-}
-
-func (c *RDBStore) generateTokenKey(ts *model.StoreToken) string {
-	return fmt.Sprintf("%s:store_tokens:%s:%s:%s", config.Conf.AppName, ts.TokenType, ts.Username, ts.UUID)
-}
-
-func (c *RDBStore) StoreCode(code *model.OauthCode) error {
-	codeStr, _ := json.Marshal(code)
-	return db.RDB.Set(context.Background(), c.generateCodeKey(code.Code, code.ClientID), codeStr, code.ExpiresAt.Sub(time.Now().UTC())).Err()
-}
-
-func (c *RDBStore) LoadCode(code string, clientID string) (*model.OauthCode, error) {
-	var codeModel model.OauthCode
-	codeStr, err := db.RDB.Get(context.Background(), c.generateCodeKey(code, clientID)).Result()
+	var session model.Session
+	sessionStr, _ := db.RDB.Get(c.ctx, c.generateSessionPath(sessionType, sessionID, username...)).Result()
+	err := json.Unmarshal([]byte(sessionStr), &session)
 	if err != nil {
-		return nil, err
+		return nil, false
 	}
-	err = json.Unmarshal([]byte(codeStr), &codeModel)
-	return &codeModel, err
+	if session.IsExpired() {
+		return nil, false
+	}
+	if sessionRaw == nil {
+		return nil, false
+	}
+	err = json.Unmarshal([]byte(session.SessionRaw), &sessionRaw)
+	if err != nil {
+		return nil, false
+	}
+	return &session, true
 }
 
-func (c *RDBStore) DeleteCode(code string, clientID string) error {
-	return db.RDB.Del(context.Background(), c.generateCodeKey(code, clientID)).Err()
+func (c *RDBStore) DeleteSession(sessionID, sessionType string, username ...string) error {
+	return db.RDB.Del(c.ctx, c.generateSessionPath(sessionID, sessionType, username...)).Err()
 }
 
-func (c *RDBStore) generateCodeKey(code string, clientID string) string {
-	return fmt.Sprintf("%s:codes:%s:%s", config.Conf.AppName, clientID, code)
+func (c *RDBStore) DeleteSessions(sessionType, username string) error {
+	var cursor uint64
+	var n int64
+	for {
+		keys, nextCursor, err := db.RDB.Scan(c.ctx, cursor, c.generateSessionPath(sessionType, fmt.Sprintf("%s:*", username)), n).Result()
+		if err != nil {
+			return err
+		}
+		if len(keys) > 0 {
+			err = db.RDB.Del(c.ctx, keys...).Err()
+			if err != nil {
+				return err
+			}
+		}
+		cursor = nextCursor
+		if cursor == 0 {
+			break
+		}
+	}
+	return nil
+}
+func (c *RDBStore) generateSessionPath(sessionType, sessionID string, username ...string) string {
+	if len(username) > 0 {
+		return fmt.Sprintf("%s:sessions:%s:%s:%s", config.Conf.AppName, sessionType, username[0], sessionID)
+	}
+	return fmt.Sprintf("%s:sessions:%s:%s", config.Conf.AppName, sessionType, sessionID)
 }
