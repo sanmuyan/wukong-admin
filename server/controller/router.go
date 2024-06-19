@@ -81,4 +81,5 @@ func router(r *gin.Engine) {
 	r.POST("/api/oauth/token", GetOauthToken)
 	r.POST("/api/oauth/revoke", RevokeOauthToken)
 	r.GET("/api/oauth/authorize", GetOauthCodeSession)
+	r.GET("/api/clientEncryptPublicKey", GetClientEncryptPublicKey)
 }

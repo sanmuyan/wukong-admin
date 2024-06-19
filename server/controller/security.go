@@ -22,3 +22,13 @@ func ModifyPassword(c *gin.Context) {
 	}
 	util.Respf().Ok().Response(util.GinRespf(c))
 }
+
+func GetClientEncryptPublicKey(c *gin.Context) {
+	res, err := svc.GetClientEncryptPublicKey()
+	if err != nil {
+		logrus.Errorf("获取公钥失败: %s", err.Err)
+		util.Respf().FailWithError(err).Response(util.GinRespf(c))
+		return
+	}
+	util.Respf().Ok().WithData(res).Response(util.GinRespf(c))
+}

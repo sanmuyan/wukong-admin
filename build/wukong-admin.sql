@@ -18,6 +18,20 @@ SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------------
+-- Table structure for certs
+-- ----------------------------
+DROP TABLE IF EXISTS `certs`;
+CREATE TABLE `certs`  (
+                          `id` int NOT NULL AUTO_INCREMENT,
+                          `private_key` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                          `public_key` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                          `purpose` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                          `created_at` datetime NULL DEFAULT NULL,
+                          `updated_at` datetime NULL DEFAULT NULL,
+                          PRIMARY KEY (`id`) USING BTREE
+);
+
+-- ----------------------------
 -- Table structure for login_securities
 -- ----------------------------
 DROP TABLE IF EXISTS `login_securities`;

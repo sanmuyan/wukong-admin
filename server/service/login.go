@@ -15,6 +15,11 @@ import (
 )
 
 func (s *Service) Login(login model.LoginRequest) (res *model.LoginResponse, ue util.RespError) {
+	var err error
+	login.Password, err = s.DecryptClientData(login.Password)
+	if err != nil {
+		return nil, util.NewRespError(err).WithCode(xresponse.HttpBadRequest)
+	}
 	var user model.User
 	user.Username = login.Username
 	if err := db.DB.Where(&model.User{Username: user.Username}).First(&user).Error; err != nil {

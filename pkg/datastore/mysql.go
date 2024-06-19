@@ -40,5 +40,5 @@ func (c *MySQLStore) DeleteSession(sessionID, sessionType string, username ...st
 }
 
 func (c *MySQLStore) DeleteSessions(sessionType, username string) error {
-	return db.DB.Where("session_type = ? AND session_id = ?", username, sessionType).Delete(&model.Session{}).Error
+	return db.DB.Where("session_type = ? AND username = ?", sessionType, username).Delete(&model.Session{}).Error
 }

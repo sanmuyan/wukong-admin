@@ -5,6 +5,7 @@ import (
 	"wukong/pkg/datastore"
 	"wukong/pkg/db"
 	"wukong/pkg/passkey"
+	"wukong/pkg/security"
 	"wukong/pkg/usersource"
 	"wukong/server/controller"
 )
@@ -25,4 +26,5 @@ func initProviders() {
 	datastore.InitStore()
 	usersource.InitUserSource()
 	passkey.InitWebAuthnConfig(config.Conf.AppName, config.Conf.WebAuthn.RPID, config.Conf.WebAuthn.RPOrigins)
+	security.InitSecurity()
 }
