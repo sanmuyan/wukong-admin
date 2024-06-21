@@ -2,13 +2,13 @@ package service
 
 import (
 	"fmt"
-	"github.com/sanmuyan/xpkg/xjwt"
 	"github.com/sanmuyan/xpkg/xutil"
 	"strings"
 	"time"
 	"wukong/pkg/config"
 	"wukong/pkg/datastore"
 	"wukong/pkg/db"
+	"wukong/pkg/tokenutil"
 	"wukong/pkg/util"
 	"wukong/server/model"
 )
@@ -117,12 +117,11 @@ func (s *Service) createOrSetOauthToken(username, tokenType, scope, clientID str
 
 func (s *Service) validateOauthRefreshToken(refreshToken, clientID, clientSecret string) (*model.Token, *model.OauthErrorResponse) {
 	var oauthApp model.OauthApp
-	var token model.Token
-	_, err := xjwt.ParseToken(refreshToken, config.Conf.Secret.TokenKey, &token)
+	token, err := tokenutil.ValidTokenStr(refreshToken)
 	if err != nil {
 		return nil, model.NewOauthErrorResponse("invalid_token")
 	}
-	err = db.DB.Where("client_id = ?", clientID).First(&oauthApp).Error
+	err = db.DB.Select("client_secret").Where("client_id = ?", clientID).First(&oauthApp).Error
 	if err != nil {
 		return nil, model.NewOauthErrorResponse("invalid_client")
 	}
@@ -131,7 +130,7 @@ func (s *Service) validateOauthRefreshToken(refreshToken, clientID, clientSecret
 			return nil, model.NewOauthErrorResponse("invalid_client_secret")
 		}
 	}
-	return &token, nil
+	return token, nil
 }
 
 func (s *Service) RefreshOauthToken(req *model.OauthTokenRequest) (*model.OauthTokenResponse, *model.OauthErrorResponse) {

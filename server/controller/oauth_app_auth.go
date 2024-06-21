@@ -33,12 +33,12 @@ func GetOauthCodeSession(c *gin.Context) {
 		c.JSON(200, model.NewOauthErrorResponse("invalid_request"))
 		return
 	}
-	token, err := tokenutil.ValidToken(tokenutil.ParseCookie(c))
+	token, err := tokenutil.ValidToken(c)
 	if err != nil {
 		c.Redirect(302, fmt.Sprintf("%s%s", config.Conf.App.OauthLoginRedirectURL, c.Request.URL.String()))
 		return
 	}
-	redirectURI, _err := svc.GetOauthCodeSession(&token, &req)
+	redirectURI, _err := svc.GetOauthCodeSession(token, &req)
 	if _err != nil {
 		c.JSON(200, _err)
 		return

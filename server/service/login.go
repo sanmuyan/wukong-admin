@@ -22,10 +22,7 @@ func (s *Service) Login(login model.LoginRequest) (res *model.LoginResponse, ue 
 	}
 	var user model.User
 	user.Username = login.Username
-	if err := db.DB.Where(&model.User{Username: user.Username}).First(&user).Error; err != nil {
-		return nil, util.NewRespError(err)
-	}
-
+	db.DB.Where(&model.User{Username: user.Username}).First(&user)
 	if user.ID == 0 || user.IsActive != 1 {
 		return nil, util.NewRespError(errors.New("用户名或密码错误"), true).WithCode(xresponse.HttpUnauthorized)
 	}
@@ -33,7 +30,7 @@ func (s *Service) Login(login model.LoginRequest) (res *model.LoginResponse, ue 
 	db.DB.Where("user_id = ?", user.ID).First(&logSecurity)
 	if logSecurity.LockAt != nil {
 		if time.Now().UTC().Before(*logSecurity.LockAt) {
-			return nil, util.NewRespError(errors.New("用户被锁定"), true).WithCode(xresponse.HttpUnauthorized)
+			return nil, util.NewRespError(errors.New("用户名或密码错误"), true).WithCode(xresponse.HttpUnauthorized)
 		}
 	}
 
