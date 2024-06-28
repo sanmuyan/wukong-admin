@@ -19,8 +19,8 @@ func (m *MFAAppLogin) IsApprove(code string, userID int) (bool, error) {
 	var mfaApp = model.MFAApp{}
 	tx := db.DB.Select("totp_secret").Where("user_id = ?", userID).First(&mfaApp)
 	if tx.RowsAffected > 0 {
-		tc, _ := xmfa.GetTOTPToken(mfaApp.TOTPSecret, config.TOTPTokenInterval)
-		if tc == code {
+		ok, _ := xmfa.ValidateTOTPToken(mfaApp.TOTPSecret, code, config.TOTPTokenInterval, config.TOTPTokenGracePeriod)
+		if ok {
 			return true, nil
 		}
 	}

@@ -8,5 +8,6 @@ type LoginRequest struct {
 type LoginResponse struct {
 	Token             string                     `json:"token,omitempty"`
 	MFABeginLogin     *MFABeginLoginResponse     `json:"mfa_begin_login,omitempty"`
+	RequireMFA        *MFAAppBindResponse        `json:"require_mfa,omitempty"`
 	PassKeyBeginLogin *PassKeyBeginLoginResponse `json:"pass_key_begin_login,omitempty"`
 }

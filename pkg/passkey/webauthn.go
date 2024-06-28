@@ -4,20 +4,21 @@ import (
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/sirupsen/logrus"
+	"sync"
 	"time"
 	"wukong/pkg/config"
 )
 
 var (
-	WebAuthn *webauthn.WebAuthn
-	err      error
+	WebAuthn *sync.Map
 )
 
-func InitWebAuthnConfig(rpName string, rpID string, rpOrigins []string) {
+func InitWebAuthnConfig() {
+	WebAuthn = new(sync.Map)
 	conf := &webauthn.Config{
-		RPDisplayName: rpName,
-		RPID:          rpID,
-		RPOrigins:     rpOrigins,
+		RPDisplayName: config.Conf.Basic.AppName,
+		RPID:          config.Conf.Basic.SiteHost,
+		RPOrigins:     []string{config.Conf.Basic.SiteURL},
 		Timeouts: webauthn.TimeoutsConfig{
 			Login:        webauthn.TimeoutConfig{Enforce: true, Timeout: config.PassKeyRegistrationTimeoutMin * time.Minute},
 			Registration: webauthn.TimeoutConfig{Enforce: true, Timeout: config.PassKeyRegistrationTimeoutMin * time.Minute},
@@ -26,7 +27,10 @@ func InitWebAuthnConfig(rpName string, rpID string, rpOrigins []string) {
 			UserVerification: protocol.VerificationDiscouraged,
 		},
 	}
-	if WebAuthn, err = webauthn.New(conf); err != nil {
-		logrus.Fatalf("failed to initialize webAuthn: %s", err)
+	webAuthn, err := webauthn.New(conf)
+	if err != nil {
+		logrus.Errorf("failed to initialize webAuthn: %s", err)
+		return
 	}
+	WebAuthn.Store(conf.RPID, webAuthn)
 }

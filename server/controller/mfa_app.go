@@ -34,7 +34,7 @@ func MFAppFinishBind(c *gin.Context) {
 		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
-	if err := svc.MFAAppFinishBind(&req, keysToUserToken(c)); err != nil {
+	if err := svc.MFAAppFinishBind(&req); err != nil {
 		logrus.Errorf("MFA 完成绑定错误: %s", err.Err)
 		util.Respf().FailWithError(err).Response(util.GinRespf(c))
 		return

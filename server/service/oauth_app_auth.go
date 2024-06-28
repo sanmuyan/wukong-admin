@@ -88,7 +88,7 @@ func (s *Service) createOauthToken(oauthCode *model.OauthCodeSession, username s
 	if err != nil {
 		return nil, err
 	}
-	refreshToken, err := s.createOrSetOauthToken(username, model.TokenTypeOauthRefresh, oauthCode.Scope, oauthCode.ClientID, config.Conf.TokenTTL)
+	refreshToken, err := s.createOrSetOauthToken(username, model.TokenTypeOauthRefresh, oauthCode.Scope, oauthCode.ClientID, config.Conf.Security.TokenTTL)
 	if err != nil {
 		return nil, err
 	}

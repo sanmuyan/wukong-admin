@@ -1,8 +1,8 @@
 package cmd
 
 import (
+	"context"
 	"github.com/gin-gonic/gin"
-	"github.com/sanmuyan/xpkg/xcrypto"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -81,7 +81,7 @@ func initConfig() error {
 	return nil
 }
 
-func Execute() {
+func Execute(ctx context.Context) {
 	if err := rootCmd.Execute(); err != nil {
 		logrus.Fatalf("cmd error: %s", err.Error())
 	}
@@ -90,15 +90,10 @@ func Execute() {
 		if err != nil {
 			logrus.Fatalf("config error: %s", err.Error())
 		}
-		err = xcrypto.DecryptCFBToStruct(&config.Conf.Secret, config.Conf.ConfigSecretKey)
-		if err != nil {
-			logrus.Fatalf("config secret decrypt error: %s", err.Error())
-		}
-		logrus.Debugf("config %+v", config.Conf)
-		initConfigPost()
+		initConfigPost(ctx)
 	}
 }
 
-func initConfigPost() {
-	configpost.PostInit()
+func initConfigPost(ctx context.Context) {
+	configpost.PostInit(ctx)
 }

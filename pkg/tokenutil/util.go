@@ -26,7 +26,7 @@ func validToken(tokenStr string) (*model.Token, error) {
 			return nil, errors.New("令牌已过期")
 		}
 	}
-	if !config.Conf.DisableVerifyServerToken {
+	if !config.Conf.Security.DisableVerifyServerToken {
 		if _, ok := datastore.DS.LoadSession(token.TokenID, token.TokenType, token.Username); !ok {
 			return nil, errors.New("服务器令牌已过期")
 		}

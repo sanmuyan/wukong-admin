@@ -78,7 +78,7 @@ func (c *RDBStore) DeleteSessions(sessionType, username string) error {
 }
 func (c *RDBStore) generateSessionPath(sessionType, sessionID string, username ...string) string {
 	if len(username) > 0 {
-		return fmt.Sprintf("%s:sessions:%s:%s:%s", config.Conf.AppName, sessionType, username[0], sessionID)
+		return fmt.Sprintf("%s:sessions:%s:%s:%s", config.Conf.Basic.AppName, sessionType, username[0], sessionID)
 	}
-	return fmt.Sprintf("%s:sessions:%s:%s", config.Conf.AppName, sessionType, sessionID)
+	return fmt.Sprintf("%s:sessions:%s:%s", config.Conf.Basic.AppName, sessionType, sessionID)
 }

@@ -16,7 +16,7 @@ func (s *Service) UpdateProfile(user *model.User, token *model.Token) util.RespE
 	user.Username = ""
 	user.ID = token.GetUserID()
 	if len(user.Password) > 0 {
-		if !xbcrypt.IsPasswordComplexity(user.Password, config.PasswordMinLength, config.PasswordMinIncludeCase) {
+		if !xbcrypt.IsPasswordComplexity(user.Password, config.Conf.Security.PasswordMinLength, config.Conf.Security.PasswordComplexity) {
 			return util.NewRespError(errors.New("密码格式不正确"), true).WithCode(xresponse.HttpBadRequest)
 		}
 		user.Password = xbcrypt.CreatePassword(user.Password)

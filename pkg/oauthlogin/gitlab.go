@@ -14,7 +14,7 @@ func NewGitlabUser() *GitlabUser {
 	return &GitlabUser{}
 }
 
-func (c *GitlabUser) GetUserInfo(userRaw []byte) (OauthProvider, error) {
+func (c *GitlabUser) GetUserInfo(userRaw []byte) (OauthUserProvider, error) {
 	user := &GitlabUser{}
 	err := json.Unmarshal(userRaw, user)
 	if err != nil {

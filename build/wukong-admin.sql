@@ -18,6 +18,19 @@ SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------------
+-- Table structure for configs
+-- ----------------------------
+DROP TABLE IF EXISTS `configs`;
+CREATE TABLE `configs`  (
+                            `id` int NOT NULL AUTO_INCREMENT,
+                            `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                            `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+                            `updated_at` datetime NULL DEFAULT NULL,
+                            `created_at` datetime NULL DEFAULT NULL,
+                            PRIMARY KEY (`id`) USING BTREE
+);
+
+-- ----------------------------
 -- Table structure for certs
 -- ----------------------------
 DROP TABLE IF EXISTS `certs`;

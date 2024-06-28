@@ -10,57 +10,62 @@ type Secret struct {
 }
 
 type AttributeMap struct {
-	DisplayName string `mapstructure:"display_name"`
-	Email       string `mapstructure:"email"`
-	Mobile      string `mapstructure:"mobile"`
+	DisplayName string `mapstructure:"display_name" json:"display_name,omitempty"`
+	Email       string `mapstructure:"email" json:"email,omitempty"`
+	Mobile      string `mapstructure:"mobile" json:"mobile,omitempty"`
 }
 
 type LDAP struct {
-	URL               string       `mapstructure:"url"`
-	SearchBase        string       `mapstructure:"search_base"`
-	AdminDN           string       `mapstructure:"admin_dn"`
-	AdminPassword     string       `mapstructure:"admin_password"`
-	UsernameAttribute string       `mapstructure:"username_attribute"`
-	AttributeMap      AttributeMap `mapstructure:"attribute_map"`
-	SearchFilter      string       `mapstructure:"search_filter"`
+	Enable            bool         `mapstructure:"enable" json:"enable" binding:"required"`
+	URL               string       `mapstructure:"url" json:"url,omitempty" binding:"required"`
+	SearchBase        string       `mapstructure:"search_base" json:"search_base,omitempty" binding:"required"`
+	AdminDN           string       `mapstructure:"admin_dn" json:"admin_dn,omitempty"`
+	AdminPassword     string       `mapstructure:"admin_password" json:"admin_password,omitempty"`
+	UsernameAttribute string       `mapstructure:"username_attribute" json:"username_attribute,omitempty" binding:"required"`
+	AttributeMap      AttributeMap `mapstructure:"attribute_map" json:"attribute_map" binding:"required"`
+	SearchFilter      string       `mapstructure:"search_filter" json:"search_filter,omitempty" binding:"required"`
 }
 
 type OauthProvider struct {
-	ClientID     string   `mapstructure:"client_id"`
-	ClientSecret string   `mapstructure:"client_secret"`
-	RedirectURL  string   `mapstructure:"redirect_url"`
-	AuthURL      string   `mapstructure:"auth_url"`
-	TokenURL     string   `mapstructure:"token_url"`
-	Scopes       []string `mapstructure:"scopes"`
-	UserInfoURL  string   `mapstructure:"user_info_url"`
-	Provider     string   `mapstructure:"provider"`
+	Enable       bool     `mapstructure:"enable" json:"enable"`
+	ClientID     string   `mapstructure:"client_id" json:"client_id,omitempty" binding:"required"`
+	ClientSecret string   `mapstructure:"client_secret" json:"client_secret,omitempty"`
+	RedirectURL  string   `mapstructure:"redirect_url" json:"redirect_url,omitempty" binding:"required"`
+	AuthURL      string   `mapstructure:"auth_url" json:"auth_url,omitempty" binding:"required"`
+	TokenURL     string   `mapstructure:"token_url" json:"token_url,omitempty" binding:"required"`
+	Scopes       []string `mapstructure:"scopes" json:"scopes,omitempty" binding:"required"`
+	UserInfoURL  string   `mapstructure:"user_info_url" json:"user_info_url,omitempty" binding:"required"`
+	Provider     string   `mapstructure:"provider" json:"provider,omitempty"  binding:"required"`
 }
 
-type App struct {
-	OauthLoginRedirectURL string `mapstructure:"oauth_login_redirect_url"`
+type Security struct {
+	TokenTTL                 int  `mapstructure:"token_ttl" json:"token_ttl,omitempty"  binding:"required"`
+	DisableVerifyServerToken bool `mapstructure:"disable_verify_server_token" json:"disable_verify_server_token,omitempty" binding:"required"`
+	LoginMaxFails            int  `mapstructure:"login_max_fails" json:"login_max_fails,omitempty" binding:"required"`
+	LoginLockTime            int  `mapstructure:"login_lock_time" json:"login_lock_time,omitempty" binding:"required"`
+	PasswordMinLength        int  `mapstructure:"password_min_length" json:"password_min_length,omitempty" binding:"required"`
+	PasswordComplexity       int  `mapstructure:"password_complexity" json:"password_complexity,omitempty" binding:"required"`
+	PassKeyLogin             bool `mapstructure:"pass_key_login" json:"pass_key_login,omitempty"`
+	RequireMFA               bool `mapstructure:"require_mfa" json:"require_mfa,omitempty"`
 }
 
-type WebAuthn struct {
-	RPID      string   `mapstructure:"rp_id"`
-	RPOrigins []string `mapstructure:"rp_origins"`
+type Basic struct {
+	AppName  string `mapstructure:"app_name" json:"app_name,omitempty" binding:"required"`
+	SiteURL  string `mapstructure:"site_url" json:"site_url,omitempty" binding:"required"`
+	SiteHost string `mapstructure:"site_host" json:"site_host,omitempty" binding:"required"`
 }
 
 type Config struct {
-	Database                 Database        `mapstructure:"database"`
-	TokenTTL                 int             `mapstructure:"token_ttl"`
-	Secret                   Secret          `mapstructure:"secret" `
-	LogLevel                 int             `mapstructure:"log_level"`
-	ServerBind               string          `mapstructure:"server_bind"`
-	ConfigSecretKey          string          `mapstructure:"config_secret_key"`
-	DataStore                string          `mapstructure:"data_store"`
-	DisableVerifyServerToken bool            `mapstructure:"disable_verify_server_token"`
-	LDAP                     LDAP            `mapstructure:"ldap"`
-	OauthProviders           []OauthProvider `mapstructure:"oauth_providers"`
-	App                      App             `mapstructure:"app"`
-	AppName                  string          `mapstructure:"app_name"`
-	WebAuthn                 WebAuthn        `mapstructure:"web_authn"`
+	Database        Database        `mapstructure:"database" json:"-"`
+	Secret          Secret          `mapstructure:"secret" json:"-"`
+	LogLevel        int             `mapstructure:"log_level" json:"-"`
+	ServerBind      string          `mapstructure:"server_bind" json:"-"`
+	ConfigSecretKey string          `mapstructure:"config_secret_key" json:"-"`
+	DataStore       string          `mapstructure:"data_store" json:"-"`
+	Security        Security        `mapstructure:"security" json:"security,omitempty"`
+	LDAP            LDAP            `mapstructure:"ldap" json:"ldap,omitempty"`
+	OauthProviders  []OauthProvider `mapstructure:"oauth_providers" json:"oauth_providers,omitempty"`
+	Basic           Basic           `mapstructure:"basic" json:"basic,omitempty"`
 }
 
 var Conf Config
-
-var OauthProviders = make(map[string]OauthProvider)

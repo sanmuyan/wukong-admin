@@ -63,3 +63,27 @@ func (s *Service) SyncLDAPUsers() (string, util.RespError) {
 	logrus.Infof("sync ldap users complete: totalUserCount=%d, newUserCount=%d", totalUserCount, newUserCount)
 	return fmt.Sprintf("LDAP 用户同步完成：用户总计=%d, 新增用户=%d", totalUserCount, newUserCount), nil
 }
+
+func (s *Service) LDAPConnTest(req *config.LDAP) (string, util.RespError) {
+	l, err := ldap.DialURL(req.URL)
+	if err != nil {
+		return "", util.NewRespError(err, true)
+	}
+	err = l.Bind(req.AdminDN, req.AdminPassword)
+	if err != nil {
+		return "", util.NewRespError(err, true)
+	}
+	return "LDAP 测试通过", nil
+}
+
+func (s *Service) LDAPLoginTest(req *config.LDAP) (string, util.RespError) {
+	l, err := ldap.DialURL(req.URL)
+	if err != nil {
+		return "", util.NewRespError(err, true)
+	}
+	err = l.Bind(req.AdminDN, req.AdminPassword)
+	if err != nil {
+		return "", util.NewRespError(err, true)
+	}
+	return "LDAP 测试通过", nil
+}

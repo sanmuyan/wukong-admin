@@ -29,8 +29,8 @@ func (t *Token) GetUserID() int {
 }
 
 func (t *Token) Valid() error {
-	if t.Issuer != config.Conf.AppName {
-		return errors.New("token is not required, issuer is not " + config.Conf.AppName)
+	if t.Issuer != config.Conf.Basic.AppName {
+		return errors.New("token is not required, issuer is not " + config.Conf.Basic.AppName)
 	}
 	if xutil.IsZero(t.Username, t.TokenType) {
 		return errors.New("token is not required, username or token_type is empty")

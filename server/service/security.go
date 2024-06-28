@@ -1,6 +1,7 @@
 package service
 
 import (
+	"crypto/rsa"
 	"errors"
 	"github.com/sanmuyan/xpkg/xbcrypt"
 	"github.com/sanmuyan/xpkg/xcrypto"
@@ -13,7 +14,7 @@ import (
 )
 
 func (s *Service) ModifyPassword(req *model.ModifyPasswordRequest, token *model.Token) util.RespError {
-	if !xbcrypt.IsPasswordComplexity(req.NewPassword, config.PasswordMinLength, config.PasswordMinIncludeCase) {
+	if !xbcrypt.IsPasswordComplexity(req.NewPassword, config.Conf.Security.PasswordMinLength, config.Conf.Security.PasswordComplexity) {
 		return util.NewRespError(errors.New("密码格式不正确"), true).WithCode(xresponse.HttpBadRequest)
 	}
 	newPassword := xbcrypt.CreatePassword(req.NewPassword)
@@ -34,7 +35,12 @@ func (s *Service) GetClientEncryptPublicKey() (any, util.RespError) {
 }
 
 func (s *Service) DecryptClientData(ciphertext string) (string, error) {
-	plaintext, err := xcrypto.DecryptPKCSRSA(ciphertext, security.ClientEncryptPrivateKey)
+	_pk, ok := security.PrivateKeys.Load(model.RSAPurposeClientEncrypt)
+	if !ok {
+		return "", errors.New("client encrypt private key not found")
+	}
+	pk := _pk.(*rsa.PrivateKey)
+	plaintext, err := xcrypto.DecryptPKCSRSA(ciphertext, pk)
 	if err != nil {
 		return "", err
 	}

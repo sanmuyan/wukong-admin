@@ -35,7 +35,8 @@ func GetOauthCodeSession(c *gin.Context) {
 	}
 	token, err := tokenutil.ValidToken(c)
 	if err != nil {
-		c.Redirect(302, fmt.Sprintf("%s%s", config.Conf.App.OauthLoginRedirectURL, c.Request.URL.String()))
+		siteURL := config.Conf.Basic.SiteURL
+		c.Redirect(302, fmt.Sprintf("%s/login?callback=%s%s", siteURL, siteURL, c.Request.URL.String()))
 		return
 	}
 	redirectURI, _err := svc.GetOauthCodeSession(token, &req)

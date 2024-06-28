@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/protocol/webauthncose"
+	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/sanmuyan/xpkg/xresponse"
 	"github.com/sanmuyan/xpkg/xutil"
 	"time"
@@ -60,7 +61,13 @@ func (s *Service) PassKeyBeginRegistration(token *model.Token) (*model.PassKeyBe
 	}
 	var user model.User
 	db.DB.First(&user, token.GetUserID())
-	options, session, err := passkey.WebAuthn.BeginRegistration(passkey.NewWAUser(&user), func(options *protocol.PublicKeyCredentialCreationOptions) {
+	_webAuthn, ok := passkey.WebAuthn.Load(config.Conf.Basic.SiteHost)
+	if !ok {
+		return nil, util.NewRespError(errors.New("webAuthn 未初始化"))
+	}
+	webAuthn := _webAuthn.(*webauthn.WebAuthn)
+	passkey.WebAuthn.Store(config.Conf.Basic.SiteHost, _webAuthn)
+	options, session, err := webAuthn.BeginRegistration(passkey.NewWAUser(&user), func(options *protocol.PublicKeyCredentialCreationOptions) {
 		options.Parameters = []protocol.CredentialParameter{
 			{
 				Type:      "public-key",
@@ -95,7 +102,12 @@ func (s *Service) PassKeyFinishRegistration(req *model.PassKeyFinishRegistration
 	defer func() {
 		_ = datastore.DS.DeleteSession(req.SessionID, model.SessionTypePassKeyRegister)
 	}()
-	credential, err := passkey.WebAuthn.FinishRegistration(passkey.NewWAUser(&user), passKeySession.SessionData, c.Request)
+	_webAuthn, ok := passkey.WebAuthn.Load(config.Conf.Basic.SiteHost)
+	if !ok {
+		return util.NewRespError(errors.New("webAuthn 未初始化"))
+	}
+	webAuthn := _webAuthn.(*webauthn.WebAuthn)
+	credential, err := webAuthn.FinishRegistration(passkey.NewWAUser(&user), passKeySession.SessionData, c.Request)
 	if err != nil {
 		return util.NewRespError(err)
 	}
@@ -111,12 +123,20 @@ func (s *Service) PassKeyFinishRegistration(req *model.PassKeyFinishRegistration
 }
 
 func (s *Service) BeginPassKeyLogin(req *model.PassKeyBeginLoginRequest) (*model.PassKeyBeginLoginResponse, util.RespError) {
+	if !config.Conf.Security.PassKeyLogin {
+		return nil, util.NewRespError(errors.New("不支持"), true).WithCode(xresponse.HttpBadRequest)
+	}
 	var user model.User
 	tx := db.DB.Select("id,username").Where("username = ?", req.Username).First(&user)
 	if tx.RowsAffected == 0 {
 		return nil, util.NewRespError(errors.New("用户不存在")).WithCode(xresponse.HttpBadRequest)
 	}
-	options, session, err := passkey.WebAuthn.BeginLogin(passkey.NewWAUser(&user))
+	_webAuthn, ok := passkey.WebAuthn.Load(config.Conf.Basic.SiteHost)
+	if !ok {
+		return nil, util.NewRespError(errors.New("webAuthn 未初始化"))
+	}
+	webAuthn := _webAuthn.(*webauthn.WebAuthn)
+	options, session, err := webAuthn.BeginLogin(passkey.NewWAUser(&user))
 	if err != nil {
 		return nil, util.NewRespError(err).WithCode(xresponse.HttpBadRequest)
 	}
@@ -147,7 +167,12 @@ func (s *Service) FinishPassKeyLogin(req *model.PassKeyFinishLoginRequest, c *gi
 		ID:       session.UserID,
 		Username: session.Username,
 	}
-	credential, err := passkey.WebAuthn.FinishLogin(passkey.NewWAUser(&user), passKeyLoginSession.SessionData, c.Request)
+	_webAuthn, ok := passkey.WebAuthn.Load(config.Conf.Basic.SiteHost)
+	if !ok {
+		return nil, util.NewRespError(errors.New("webAuthn 未初始化"))
+	}
+	webAuthn := _webAuthn.(*webauthn.WebAuthn)
+	credential, err := webAuthn.FinishLogin(passkey.NewWAUser(&user), passKeyLoginSession.SessionData, c.Request)
 	if err != nil {
 		return nil, util.NewRespError(err)
 	}

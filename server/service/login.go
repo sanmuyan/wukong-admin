@@ -33,11 +33,11 @@ func (s *Service) Login(login model.LoginRequest) (res *model.LoginResponse, ue 
 			return nil, util.NewRespError(errors.New("用户名或密码错误"), true).WithCode(xresponse.HttpUnauthorized)
 		}
 	}
-
-	us, ok := usersource.UserSources[user.Source]
+	_us, ok := usersource.UserSources.Load(user.Source)
 	if !ok {
-		return nil, util.NewRespError(errors.New("未知的用户来源"), false)
+		return nil, util.NewRespError(errors.New("不支持"), true)
 	}
+	us := _us.(usersource.UserSource)
 	if !us.Login(login.Username, login.Password) {
 		go s.updateLoginFail(&logSecurity)
 		return nil, util.NewRespError(errors.New("用户名或密码错误"), true).WithCode(xresponse.HttpUnauthorized)
@@ -66,6 +66,18 @@ func (s *Service) mfaLogin(user *model.User) (*model.LoginResponse, util.RespErr
 			MFABeginLogin: mfaLogin,
 		}, nil
 	}
+	if config.Conf.Security.RequireMFA {
+		var token model.Token
+		token.Username = user.Username
+		token.SetUserID(user.ID)
+		resp, re := s.MFAAppBeginBind(&token)
+		if re != nil {
+			return nil, re
+		}
+		return &model.LoginResponse{
+			RequireMFA: resp,
+		}, nil
+	}
 	return s.createLoginToken(user.ID, user.Username)
 }
 
@@ -76,7 +88,7 @@ func (s *Service) createLoginToken(userID int, username string) (res *model.Logi
 		TokenType:   model.TokenTypeSession,
 	}
 	token.SetUserID(userID)
-	tokenStr, err := s.CreateOrSetToken(&token, config.Conf.TokenTTL)
+	tokenStr, err := s.CreateOrSetToken(&token, config.Conf.Security.TokenTTL)
 	if err != nil {
 		return nil, util.NewRespError(err)
 	}
@@ -116,8 +128,8 @@ func (s *Service) updateLoginFail(ls *model.LoginSecurity) {
 		ls.LoginFailCount = xutil.PtrTo(0)
 	}
 	ls.LoginFailCount = xutil.PtrTo(*ls.LoginFailCount + 1)
-	if *ls.LoginFailCount >= 10 {
-		ls.LockAt = xutil.PtrTo(time.Now().UTC().Add(time.Minute * 1))
+	if *ls.LoginFailCount >= config.Conf.Security.LoginMaxFails {
+		ls.LockAt = xutil.PtrTo(time.Now().UTC().Add(time.Second * time.Duration(config.Conf.Security.LoginLockTime)))
 	}
 	db.DB.Save(ls)
 }

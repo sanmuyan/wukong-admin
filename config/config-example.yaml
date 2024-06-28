@@ -1,46 +1,13 @@
-# 应用名，不应该随意修改！
-app_name: wukong
+basic:
+  # 应用名，不应该随意修改！
+  app_name: wukong
 database:
   mysql: root:password@tcp(localhost:3306)/wukong?parseTime=true
   redis: localhost:6379
 secret:
   # 用于 JWT 签名的密钥，该字符串应该使用 CFB 加密
   token_key: ""
+# 日志级别
 log_level: 4
-# token 过期时间
-token_ttl: 86400
 # 临时数据存储数据库类型
 data_storage: mysql
-# 是否禁用验证服务端 token 是否有效
-disable_verify_server_token: false
-# ldap 配置
-ldap:
-  url: ldap://localhost:389
-  search_base: ou=users,dc=example,dc=com
-  search_filter: ((cn=*))
-  username_attribute: cn
-  attribute_map:
-    display_name: displayName
-    email: mail
-    mobile: mobile
-  admin_dn: cn=admin,dc=example,dc=com
-  admin_password: 123456
-# oauth 登录配置
-oauth_providers:
-  - provider: gitlab
-    client_id:
-    client_secret:
-    redirect_url:
-    token_url:
-    auth_url:
-    user_info_url:
-    scopes:
-      - read_user
-app:
-  # 通过应用登录时未登录时跳转 URL
-  oauth_login_redirect_url: http://localhost/login?callback=
-web_authn:
-# WebAuthn 配置
-  rp_id: localhost:8080
-  rp_origins:
-    - http://localhost:8080

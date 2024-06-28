@@ -6,7 +6,7 @@ import (
 
 func TestNewConfig(t *testing.T) {
 	config := Config{}
-	if config.TokenTTL == 0 {
+	if config.Database.Mysql == "" {
 		t.Error(config)
 	}
 	t.Log(config)

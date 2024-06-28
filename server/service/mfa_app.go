@@ -36,25 +36,25 @@ func (s *Service) MFAAppBeginBind(token *model.Token) (*model.MFAAppBindResponse
 	return &model.MFAAppBindResponse{
 		SessionID:  sessionID,
 		TOTPSecret: totpSecret,
-		QRCodeURI:  fmt.Sprintf("otpauth://totp/%s:%s?secret=%s", config.Conf.AppName, token.Username, totpSecret),
+		QRCodeURI:  fmt.Sprintf("otpauth://totp/%s:%s?secret=%s", config.Conf.Basic.AppName, token.Username, totpSecret),
 		TimeoutMin: config.MFABindTimeoutMin,
 	}, nil
 }
 
-func (s *Service) MFAAppFinishBind(req *model.MFAAppBindRequest, token *model.Token) util.RespError {
+func (s *Service) MFAAppFinishBind(req *model.MFAAppBindRequest) util.RespError {
 	var mfaBindSession model.MFAAppBindSession
-	_, ok := datastore.DS.LoadSession(req.SessionID, model.SessionTypeMFAAppBind, &mfaBindSession)
+	session, ok := datastore.DS.LoadSession(req.SessionID, model.SessionTypeMFAAppBind, &mfaBindSession)
 	if !ok {
 		return util.NewRespError(errors.New("绑定超时"), true).WithCode(xresponse.HttpBadRequest)
+	}
+	if !xutil.RemoveError(xmfa.ValidateTOTPToken(mfaBindSession.TOTPSecret, req.TOTPCode, config.TOTPTokenInterval, config.TOTPTokenGracePeriod)) {
+		return util.NewRespError(errors.New("验证码错误"), true).WithCode(xresponse.HttpBadRequest)
 	}
 	defer func() {
 		_ = datastore.DS.DeleteSession(req.SessionID, model.SessionTypeMFAAppBind)
 	}()
-	if req.TOTPCode != xutil.RemoveError(xmfa.GetTOTPToken(mfaBindSession.TOTPSecret, config.TOTPTokenInterval)) {
-		return util.NewRespError(errors.New("验证码错误"), true).WithCode(xresponse.HttpBadRequest)
-	}
 	mfaApp := model.MFAApp{
-		UserID:     token.GetUserID(),
+		UserID:     session.UserID,
 		TOTPSecret: mfaBindSession.TOTPSecret,
 	}
 	if err := db.DB.Create(&mfaApp).Error; err != nil {

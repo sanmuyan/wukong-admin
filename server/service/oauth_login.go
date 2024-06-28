@@ -10,24 +10,30 @@ import (
 	"io"
 	"wukong/pkg/config"
 	"wukong/pkg/db"
+	"wukong/pkg/oauthlogin"
 	useroauth "wukong/pkg/oauthlogin"
 	"wukong/pkg/util"
 	"wukong/server/model"
 )
 
 func (s *Service) OauthLogin(provider string) (string, util.RespError) {
-	providerConf, ok := config.OauthProviders[provider]
+	_providerConf, ok := oauthlogin.OauthProviders.Load(provider)
 	if !ok {
-		return "", util.NewRespError(errors.New("provider not found"))
+		return "", util.NewRespError(errors.New("不支持"), true).WithCode(xresponse.HttpBadRequest)
+	}
+	providerConf := _providerConf.(config.OauthProvider)
+	if !providerConf.Enable {
+		return "", util.NewRespError(errors.New("未开启"), true)
 	}
 	return s.getOauthConfig(providerConf).AuthCodeURL(provider), nil
 }
 
 func (s *Service) OauthCallback(code string, state string) (res *model.LoginResponse, re util.RespError) {
-	providerConf, ok := config.OauthProviders[state]
+	_providerConf, ok := oauthlogin.OauthProviders.Load(state)
 	if !ok {
 		return nil, util.NewRespError(errors.New("provider not found"))
 	}
+	providerConf := _providerConf.(config.OauthProvider)
 	oauthUser, err := s.getOauthUser(s.getOauthConfig(providerConf), code, state, providerConf.UserInfoURL)
 	if err != nil {
 		return nil, util.NewRespError(err).WithCode(xresponse.HttpUnauthorized)
@@ -55,7 +61,7 @@ func (s *Service) OauthCallback(code string, state string) (res *model.LoginResp
 	return s.mfaLogin(&user)
 }
 
-func (s *Service) getOauthUser(conf *oauth2.Config, code string, state string, userInfoURL string) (useroauth.OauthProvider, error) {
+func (s *Service) getOauthUser(conf *oauth2.Config, code string, state string, userInfoURL string) (useroauth.OauthUserProvider, error) {
 	token, err := conf.Exchange(context.Background(), code)
 	if err != nil {
 		return nil, err
@@ -76,7 +82,7 @@ func (s *Service) getOauthUser(conf *oauth2.Config, code string, state string, u
 	if err != nil {
 		return nil, err
 	}
-	op, ok := useroauth.OauthProviders[state]
+	op, ok := useroauth.OauthUserProviders[state]
 	if !ok {
 		return nil, errors.New("provider not found")
 	}

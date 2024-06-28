@@ -27,7 +27,7 @@ func (s *Service) CreateUser(user *model.User) util.RespError {
 	if !xutil.IsUsername(user.Username) {
 		return util.NewRespError(errors.New("用户名不符合要求"), true).WithCode(xresponse.HttpBadRequest)
 	}
-	if !xbcrypt.IsPasswordComplexity(user.Password, config.PasswordMinLength, config.PasswordMinIncludeCase) {
+	if !xbcrypt.IsPasswordComplexity(user.Password, config.Conf.Security.PasswordMinLength, config.Conf.Security.PasswordComplexity) {
 		return util.NewRespError(errors.New("密码不符合要求"), true).WithCode(xresponse.HttpBadRequest)
 	}
 	tx := db.DB.Select("id").Where(&model.User{Username: user.Username}).First(&model.User{})

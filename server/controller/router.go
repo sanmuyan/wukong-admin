@@ -1,18 +1,33 @@
 package controller
 
 import (
+	"context"
+	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"net/http"
 	"wukong/server/middleware"
 )
 
-func RunServer(addr string) {
+func RunServer(ctx context.Context, addr string) {
 	r := gin.Default()
 	router(r)
-	err := r.Run(addr)
-	if err != nil {
-		logrus.Fatalf("server run error: %s", err)
+	srv := &http.Server{
+		Addr:    addr,
+		Handler: r,
 	}
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			if err != nil {
+				logrus.Fatalf("server run error: %s", err)
+			}
+		}
+	}()
+	<-ctx.Done()
+	if err := srv.Shutdown(context.Background()); err != nil {
+		logrus.Errorf("server shutdown error: %s", err)
+	}
+	logrus.Warn("server has been shutdown")
 }
 
 func router(r *gin.Engine) {
@@ -32,7 +47,6 @@ func router(r *gin.Engine) {
 
 		apiGroup.GET("/account/mfaAppStatus", GetMFAAppStatus)
 		apiGroup.GET("/account/mfaAppBeginBind", MFAAppBeginBind)
-		apiGroup.POST("/account/mfaAppFinishBind", MFAppFinishBind)
 		apiGroup.DELETE("/account/mfaApp", DeleteMFAApp)
 		apiGroup.GET("/account/passKey", GetPassKeys)
 		apiGroup.PUT("/account/passKey", UpdatePassKey)
@@ -62,7 +76,8 @@ func router(r *gin.Engine) {
 		apiGroup.POST("/token", CreateToken)
 		apiGroup.DELETE("/token", DeleteTokenSession)
 
-		apiGroup.PUT("/ldap/user/sync", SyncLDAPUsers)
+		apiGroup.POST("/ldap/user/sync", SyncLDAPUsers)
+		apiGroup.POST("/ldap/connTest", LDAPConnTest)
 
 		apiGroup.GET("/oauth/authorize/frontRedirect", GetOauthCodeSessionFrontRedirect)
 
@@ -71,9 +86,22 @@ func router(r *gin.Engine) {
 		apiGroup.PUT("/app/oauth", UpdateOauthApp)
 		apiGroup.DELETE("/app/oauth", DeleteOauthApp)
 
+		apiGroup.GET("/settings/basic", GetBasicConfig)
+		apiGroup.POST("/settings/basic", UpdateBasicConfig)
+
+		apiGroup.GET("/settings/security", GetSecurityConfig)
+		apiGroup.POST("/settings/security", UpdateSecurityConfig)
+
+		apiGroup.GET("/settings/ldap", GetLDAPConfig)
+		apiGroup.POST("/settings/ldap", UpdateLDAPConfig)
+
+		apiGroup.GET("/settings/oauthProviders", GetOauthProvidersConfig)
+		apiGroup.POST("/settings/oauthProviders", UpdateOauthProvidersConfig)
+
 	}
 	r.POST("/api/login", Login)
 	r.POST("/api/mfaFinishLogin", MFAFinishLogin)
+	r.POST("/api/account/mfaAppFinishBind", MFAppFinishBind)
 	r.POST("/api/passKeyBeginLogin", PassKeyBeginLogin)
 	r.POST("/api/passKeyFinishLogin", PassKeyFinishLogin)
 	r.GET("/api/oauth/login", OauthLogin)
