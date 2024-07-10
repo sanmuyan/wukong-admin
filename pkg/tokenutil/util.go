@@ -12,6 +12,7 @@ import (
 	"wukong/server/model"
 )
 
+// ValidToken 验证令牌
 func validToken(tokenStr string) (*model.Token, error) {
 	var token model.Token
 	if tokenStr == "" {
@@ -40,6 +41,7 @@ func validToken(tokenStr string) (*model.Token, error) {
 	return &token, nil
 }
 
+// getTokenFromHeader 从请求头中获取令牌
 func getTokenFromHeader(c *gin.Context) (string, bool) {
 	tokenHeaderSplit := strings.Split(c.Request.Header.Get("Authorization"), "Bearer ")
 	if len(tokenHeaderSplit) == 2 {
@@ -48,6 +50,7 @@ func getTokenFromHeader(c *gin.Context) (string, bool) {
 	return "", false
 }
 
+// getTokenFromCookie 从 Cookie 中获取令牌
 func getTokenFromCookie(c *gin.Context) (string, bool) {
 	tokenCookie, _ := c.Cookie("Authorization")
 	tokenCookieSplit := strings.Split(tokenCookie, "Bearer ")
@@ -57,6 +60,7 @@ func getTokenFromCookie(c *gin.Context) (string, bool) {
 	return "", false
 }
 
+// getToken 从请求头或 Cookie 中获取令牌
 func getToken(c *gin.Context) (token string, ok bool) {
 	token, ok = getTokenFromHeader(c)
 	if ok {
@@ -69,11 +73,13 @@ func getToken(c *gin.Context) (token string, ok bool) {
 	return token, false
 }
 
+// ValidToken 验证令牌
 func ValidToken(c *gin.Context) (token *model.Token, err error) {
 	tokenStr, _ := getToken(c)
 	return validToken(tokenStr)
 }
 
+// ValidTokenStr 验证字符串令牌
 func ValidTokenStr(tokenStr string) (token *model.Token, err error) {
 	return validToken(tokenStr)
 }

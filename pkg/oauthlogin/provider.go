@@ -5,10 +5,15 @@ import (
 	"wukong/pkg/config"
 )
 
+// OauthUserProvider 第三方 OAuth 登录获取用户信息
 type OauthUserProvider interface {
+	// GetUserInfo 获取用户信息
 	GetUserInfo(user []byte) (OauthUserProvider, error)
+	// GetUsername 获取用户名
 	GetUsername() string
+	// GetEmail 获取邮箱
 	GetEmail() string
+	// GetDisplayName 获取显示名称
 	GetDisplayName() string
 }
 

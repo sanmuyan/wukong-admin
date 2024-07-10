@@ -11,8 +11,10 @@ import (
 
 var svc = service.NewService()
 
+// AccessControl 访问控制
+// 1. 校验 token 是否有效或过期
+// 2. 校验 token 是否有权限访问资源
 func AccessControl() gin.HandlerFunc {
-	// 1. 校验 token 是否有效或过期 2. 校验 token 是否有权限访问资源
 	return func(c *gin.Context) {
 		token, err := tokenutil.ValidToken(c)
 		if err != nil {

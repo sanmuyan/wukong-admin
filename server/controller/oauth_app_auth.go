@@ -11,6 +11,7 @@ import (
 	"wukong/server/model"
 )
 
+// GetOauthCodeSessionFrontRedirect 获取授权码，并返回回调重定向地址，由浏览器执行重定向
 func GetOauthCodeSessionFrontRedirect(c *gin.Context) {
 	var req model.OauthCodeSessionRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
@@ -27,6 +28,7 @@ func GetOauthCodeSessionFrontRedirect(c *gin.Context) {
 	util.Respf().Ok().WithData(data).Response(util.GinRespf(c))
 }
 
+// GetOauthCodeSession 获取授权码，并重定向回调地址，如果未登录则重定向到登录入口
 func GetOauthCodeSession(c *gin.Context) {
 	var req model.OauthCodeSessionRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
@@ -47,6 +49,7 @@ func GetOauthCodeSession(c *gin.Context) {
 	c.Redirect(302, redirectURI)
 }
 
+// GetOauthToken 获取 OAuth token
 func GetOauthToken(c *gin.Context) {
 	var req model.OauthTokenRequest
 	if err := c.ShouldBind(&req); err != nil {
@@ -55,6 +58,7 @@ func GetOauthToken(c *gin.Context) {
 	}
 	switch req.GrantType {
 	case "authorization_code":
+		// 获取 access token & refresh token
 		token, err := svc.GetOauthToken(&req)
 		if err != nil {
 			c.JSON(200, err)
@@ -62,6 +66,7 @@ func GetOauthToken(c *gin.Context) {
 		}
 		c.JSON(200, token)
 	case "refresh_token":
+		// 刷新 access token
 		token, err := svc.RefreshOauthToken(&req)
 		if err != nil {
 			c.JSON(200, err)
@@ -73,6 +78,7 @@ func GetOauthToken(c *gin.Context) {
 	}
 }
 
+// RevokeOauthToken 撤销 OAuth token
 func RevokeOauthToken(c *gin.Context) {
 	var req model.OauthRevokeTokenRequest
 	if err := c.ShouldBind(&req); err != nil {

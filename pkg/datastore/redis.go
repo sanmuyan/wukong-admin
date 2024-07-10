@@ -19,6 +19,10 @@ func NewRDBStore() *RDBStore {
 	return &RDBStore{ctx: context.Background()}
 }
 
+func (c *RDBStore) Clean(ctx context.Context) DataStore {
+	return c
+}
+
 func (c *RDBStore) StoreSession(s *model.Session, username ...string) error {
 	var expires time.Duration
 	if s.ExpiresAt != nil {

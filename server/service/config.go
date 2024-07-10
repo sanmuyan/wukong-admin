@@ -2,7 +2,6 @@ package service
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/sanmuyan/xpkg/xutil"
 	"wukong/pkg/config"
 	"wukong/pkg/db"
@@ -30,7 +29,6 @@ func (s *Service) GetSecurityConfig() *config.Security {
 }
 
 func (s *Service) UpdateSecurityConfig(req *config.Security) {
-	fmt.Println(string(xutil.RemoveError(json.Marshal(req))))
 	_ = xutil.FillObj(req, &config.Conf.Security)
 	s.saveConfig()
 }

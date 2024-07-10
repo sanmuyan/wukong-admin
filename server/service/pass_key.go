@@ -100,6 +100,7 @@ func (s *Service) PassKeyFinishRegistration(req *model.PassKeyFinishRegistration
 		return util.NewRespError(errors.New("注册超时"), true).WithCode(xresponse.HttpBadRequest)
 	}
 	defer func() {
+		// session 只能使用一次
 		_ = datastore.DS.DeleteSession(req.SessionID, model.SessionTypePassKeyRegister)
 	}()
 	_webAuthn, ok := passkey.WebAuthn.Load(config.Conf.Basic.SiteHost)
@@ -124,7 +125,7 @@ func (s *Service) PassKeyFinishRegistration(req *model.PassKeyFinishRegistration
 
 func (s *Service) BeginPassKeyLogin(req *model.PassKeyBeginLoginRequest) (*model.PassKeyBeginLoginResponse, util.RespError) {
 	if !config.Conf.Security.PassKeyLogin {
-		return nil, util.NewRespError(errors.New("不支持"), true).WithCode(xresponse.HttpBadRequest)
+		return nil, util.NewRespError(errors.New("登录不支持"), true).WithCode(xresponse.HttpBadRequest)
 	}
 	var user model.User
 	tx := db.DB.Select("id,username").Where("username = ?", req.Username).First(&user)
@@ -161,6 +162,7 @@ func (s *Service) FinishPassKeyLogin(req *model.PassKeyFinishLoginRequest, c *gi
 		return nil, util.NewRespError(errors.New("登录超时"), true)
 	}
 	defer func() {
+		// session 只能使用一次
 		_ = datastore.DS.DeleteSession(req.SessionID, model.SessionTypePassKeyLogin)
 	}()
 	user := model.User{

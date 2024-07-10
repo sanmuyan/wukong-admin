@@ -23,28 +23,32 @@ func (s *Service) Login(login model.LoginRequest) (res *model.LoginResponse, ue 
 	var user model.User
 	user.Username = login.Username
 	db.DB.Where(&model.User{Username: user.Username}).First(&user)
-	if user.ID == 0 || user.IsActive != 1 {
-		return nil, util.NewRespError(errors.New("用户名或密码错误"), true).WithCode(xresponse.HttpUnauthorized)
+	if user.ID == 0 {
+		return nil, util.NewRespError(errors.New("用户不存在"), true).WithCode(xresponse.HttpUnauthorized)
+	}
+	if user.IsActive != 1 {
+		return nil, util.NewRespError(errors.New("用户已禁用"), true).WithCode(xresponse.HttpUnauthorized)
 	}
 	var logSecurity model.LoginSecurity
 	db.DB.Where("user_id = ?", user.ID).First(&logSecurity)
 	if logSecurity.LockAt != nil {
 		if time.Now().UTC().Before(*logSecurity.LockAt) {
-			return nil, util.NewRespError(errors.New("用户名或密码错误"), true).WithCode(xresponse.HttpUnauthorized)
+			return nil, util.NewRespError(errors.New("禁止错误"), true).WithCode(xresponse.HttpUnauthorized)
 		}
 	}
 	_us, ok := usersource.UserSources.Load(user.Source)
 	if !ok {
-		return nil, util.NewRespError(errors.New("不支持"), true)
+		return nil, util.NewRespError(errors.New("登录不支持"), true)
 	}
 	us := _us.(usersource.UserSource)
 	if !us.Login(login.Username, login.Password) {
 		go s.updateLoginFail(&logSecurity)
-		return nil, util.NewRespError(errors.New("用户名或密码错误"), true).WithCode(xresponse.HttpUnauthorized)
+		return nil, util.NewRespError(errors.New("密码错误"), true).WithCode(xresponse.HttpUnauthorized)
 	}
 	return s.mfaLogin(&user)
 }
 
+// mfaLogin 判断是否需要二次验证
 func (s *Service) mfaLogin(user *model.User) (*model.LoginResponse, util.RespError) {
 	//passkey, re := s.BeginPassKeyLogin(&model.PassKeyBeginLoginRequest{Username: user.Username})
 	//if re != nil {

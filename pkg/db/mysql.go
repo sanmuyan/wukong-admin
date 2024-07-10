@@ -15,7 +15,7 @@ func InitMysql() {
 	var logLevel logger.LogLevel
 	var err error
 	logLevel = logger.LogLevel(config.Conf.LogLevel - 1)
-	dsn := config.Conf.Database.Mysql
+	dsn := config.Conf.Database.MySQL
 	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logLevel),
 	})

@@ -32,6 +32,7 @@ const (
 )
 
 func init() {
+	// 初始化命令行参数
 	defaultConfig := "./config/config.yaml"
 	if os.Getenv("ENV_NAME") != "" {
 		defaultConfig = "./config/config-" + os.Getenv("ENV_NAME") + ".yaml"
@@ -43,6 +44,7 @@ func init() {
 }
 
 func initConfig() error {
+	// 设置日志格式
 	logrus.SetFormatter(&logrus.TextFormatter{
 		DisableColors:   true,
 		TimestampFormat: "2006-01-02 15:04:05",
@@ -53,12 +55,19 @@ func initConfig() error {
 	})
 
 	viper.SetConfigName("config")
+
+	// 配置文件和命令行参数都不指定时的默认配置
+	// viper.SetDefault("conn_timeout", 10)
+
+	// 读取配置文件
 	viper.SetConfigFile(configFile)
 	err := viper.ReadInConfig()
 	if err != nil {
 		return err
 	}
 
+	// 绑定命令行参数到配置项
+	// 配置项优先级：命令行参数 > 配置文件 > 默认命令行参数
 	_ = viper.BindPFlag("server_bind", rootCmd.Flags().Lookup("server-bind"))
 	_ = viper.BindPFlag("config_secret_key", rootCmd.Flags().Lookup("config-secret-key"))
 	_ = viper.BindPFlag("log_level", rootCmd.Flags().Lookup("log-level"))

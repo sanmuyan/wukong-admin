@@ -42,6 +42,7 @@ func (s *Service) MFAFinishLogin(req *model.MFAFinishLoginRequest) (*model.Login
 		return nil, util.NewRespError(errors.New("登陆超时"))
 	}
 	defer func() {
+		// session 只能使用一次
 		_ = datastore.DS.DeleteSession(req.SessionID, model.SessionTypeMFALogin)
 	}()
 	ap, ok := mfalogin.MFAProviders[req.MFAProvider]

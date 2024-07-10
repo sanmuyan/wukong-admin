@@ -19,11 +19,11 @@ import (
 func (s *Service) OauthLogin(provider string) (string, util.RespError) {
 	_providerConf, ok := oauthlogin.OauthProviders.Load(provider)
 	if !ok {
-		return "", util.NewRespError(errors.New("不支持"), true).WithCode(xresponse.HttpBadRequest)
+		return "", util.NewRespError(errors.New("登录不支持"), true).WithCode(xresponse.HttpBadRequest)
 	}
 	providerConf := _providerConf.(config.OauthProvider)
 	if !providerConf.Enable {
-		return "", util.NewRespError(errors.New("未开启"), true)
+		return "", util.NewRespError(errors.New("登录未开启"), true)
 	}
 	return s.getOauthConfig(providerConf).AuthCodeURL(provider), nil
 }

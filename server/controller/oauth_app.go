@@ -26,7 +26,7 @@ func CreateOauthApp(c *gin.Context) {
 		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
-	if xutil.IsZero(oauthApp.APPName) {
+	if xutil.IsZero(oauthApp.AppName) {
 		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
@@ -44,7 +44,7 @@ func UpdateOauthApp(c *gin.Context) {
 		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
-	if xutil.IsZero(oauthApp.APPName, oauthApp.ClientID, oauthApp.ClientSecret) {
+	if xutil.IsZero(oauthApp.AppName, oauthApp.ClientID, oauthApp.ClientSecret) {
 		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}

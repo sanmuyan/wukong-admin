@@ -11,6 +11,7 @@ import (
 
 var PrivateKeys *sync.Map
 
+// InitPrivateKeys 初始化 RSA 密钥
 func InitPrivateKeys() {
 	PrivateKeys = new(sync.Map)
 	var certs []*model.Cert

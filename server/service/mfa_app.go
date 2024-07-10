@@ -51,6 +51,7 @@ func (s *Service) MFAAppFinishBind(req *model.MFAAppBindRequest) util.RespError 
 		return util.NewRespError(errors.New("验证码错误"), true).WithCode(xresponse.HttpBadRequest)
 	}
 	defer func() {
+		// session 只能使用一次
 		_ = datastore.DS.DeleteSession(req.SessionID, model.SessionTypeMFAAppBind)
 	}()
 	mfaApp := model.MFAApp{

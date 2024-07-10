@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Session 的类型
 const (
 	SessionTypeMFAAppBind        = "mfa_app_bind"
 	SessionTypeMFALogin          = "mfa_login"
@@ -18,14 +19,21 @@ const (
 	SessionTypeOauthRefreshToken = TokenTypeOauthRefresh
 )
 
+// Session 数据库对象，用于存储各类会话
 type Session struct {
-	SessionID   string     `json:"session_id"`
-	SessionType string     `json:"session_type"`
-	UserID      int        `json:"user_id"`
-	Username    string     `json:"username"`
-	SessionRaw  string     `json:"session_raw"`
-	ExpiresAt   *time.Time `json:"expires_at"`
-	CreatedAt   time.Time  `json:"created_at"`
+	// SessionID 唯一标识，使用 UUID 生成，用于命中用户身份信息
+	SessionID string `json:"session_id"`
+	// SessionType 类型
+	SessionType string `json:"session_type"`
+	// UserID 用户 ID
+	UserID int `json:"user_id"`
+	// Username 用户名
+	Username string `json:"username"`
+	// SessionRaw Session 原始内容
+	SessionRaw string `json:"session_raw"`
+	// ExpiresAt 过期时间
+	ExpiresAt *time.Time `json:"expires_at"`
+	CreatedAt time.Time  `json:"created_at"`
 }
 
 func NewSession(sessionID string, sessionType string, userID int, username string, sessionRaw any) *Session {

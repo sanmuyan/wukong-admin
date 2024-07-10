@@ -63,6 +63,7 @@ func (s *Service) GetOauthToken(req *model.OauthTokenRequest) (*model.OauthToken
 		return nil, model.NewOauthErrorResponse("invalid_code")
 	}
 	defer func() {
+		// session 只能使用一次
 		_ = datastore.DS.DeleteSession(req.Code, model.SessionTypeOAuthCode)
 	}()
 	if oauthCodeSession.ClientID != req.ClientID {

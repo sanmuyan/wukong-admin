@@ -4,16 +4,27 @@ import (
 	"wukong/pkg/page"
 )
 
+// Query 用于便捷查询数据
 type Query struct {
+	// QueryLikeValue 模糊查询的值
 	QueryLikeValue string
-	QueryLikeKeys  string
-	QueryMustMap   map[string]any
-	Page           *page.Page
-	QueryType      int
+	// QueryLikeKeys 允许模糊查询的字段，多个字段用逗号隔开
+	QueryLikeKeys string
+	// QueryMustMap 精确查询的值
+	QueryMustMap map[string]any
+	// Page 查询分页器
+	Page *page.Page
+	// QueryType 查询类型
+	// 0 精确查询
+	// 1 模糊查询
+	QueryType int
 }
 
+// List 数据查询列表结构
 type List interface {
+	// GetData 获取数据
 	GetData() any
+	// GetPage 获取分页器
 	GetPage() *page.Page
 }
 

@@ -5,7 +5,9 @@ import (
 	"wukong/pkg/config"
 )
 
+// UserSource 用户来源
 type UserSource interface {
+	// Login 用户登录
 	Login(username string, password string) bool
 }
 

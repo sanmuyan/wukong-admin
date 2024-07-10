@@ -9,6 +9,7 @@ import (
 	"wukong/server/model"
 )
 
+// WAUser 实现 webauthn user
 type WAUser struct {
 	*model.User
 }
