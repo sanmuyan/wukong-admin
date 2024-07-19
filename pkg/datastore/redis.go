@@ -43,14 +43,14 @@ func (c *RDBStore) LoadSession(sessionID, sessionType string, sessionRaw any, us
 		return nil, false
 	}
 	if session.IsExpired() {
-		return nil, false
+		return &session, false
 	}
 	if sessionRaw == nil {
-		return nil, false
+		return &session, true
 	}
 	err = json.Unmarshal([]byte(session.SessionRaw), &sessionRaw)
 	if err != nil {
-		return nil, false
+		return &session, false
 	}
 	return &session, true
 }

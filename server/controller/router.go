@@ -67,6 +67,12 @@ func router(r *gin.Engine) {
 		apiGroup.POST("/account/passKeyFinishRegistration", PassKeyFinishRegistration)
 		// 修改密码
 		apiGroup.POST("/account/modifyPassword", ModifyPassword)
+		// 绑定第三方登录
+		apiGroup.GET("/account/oauthBindCallback", OauthBindCallback)
+		// 删除第三方登录绑定
+		apiGroup.DELETE("/account/oauthBind", DeleteOauthBind)
+		// 获取第三方登录绑定状态
+		apiGroup.GET("/account/oauthBindStatus", GetOauthBindStatus)
 
 		// 角色管理
 		apiGroup.GET("/role", GetRoles)
@@ -98,6 +104,8 @@ func router(r *gin.Engine) {
 		apiGroup.POST("/ldap/user/sync", SyncLDAPUsers)
 		// LDAP 连接测试
 		apiGroup.POST("/ldap/connTest", LDAPConnTest)
+		// LDAP 用户登录测试
+		apiGroup.POST("/ldap/loginTest", LDAPLoginTest)
 
 		// OAuth 应用登录，从前端跳转
 		apiGroup.GET("/oauth/authorize/frontRedirect", GetOauthCodeSessionFrontRedirect)

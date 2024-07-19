@@ -6,6 +6,7 @@ import (
 	"github.com/sanmuyan/xpkg/xbcrypt"
 	"github.com/sanmuyan/xpkg/xcrypto"
 	"github.com/sanmuyan/xpkg/xresponse"
+	"github.com/sanmuyan/xpkg/xutil"
 	"wukong/pkg/config"
 	"wukong/pkg/db"
 	"wukong/pkg/security"
@@ -14,6 +15,7 @@ import (
 )
 
 func (s *Service) ModifyPassword(req *model.ModifyPasswordRequest, token *model.Token) util.RespError {
+	req.NewPassword = xutil.RemoveError(s.DecryptClientData(req.NewPassword))
 	if !xbcrypt.IsPasswordComplexity(req.NewPassword, config.Conf.Security.PasswordMinLength, config.Conf.Security.PasswordComplexity) {
 		return util.NewRespError(errors.New("密码格式不正确"), true).WithCode(xresponse.HttpBadRequest)
 	}

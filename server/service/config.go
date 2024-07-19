@@ -44,11 +44,11 @@ func (s *Service) UpdateLDAPConfig(req *config.LDAP) {
 	s.saveConfig()
 }
 
-func (s *Service) GetOauthProvidersConfig() *[]config.OauthProvider {
+func (s *Service) GetOauthProvidersConfig() *config.OauthProviders {
 	return &config.Conf.OauthProviders
 }
 
-func (s *Service) UpdateOauthProvidersConfig(req *[]config.OauthProvider) {
+func (s *Service) UpdateOauthProvidersConfig(req *config.OauthProviders) {
 	_ = xutil.FillObj(req, &config.Conf.OauthProviders)
 	s.saveConfig()
 }

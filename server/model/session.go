@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	"github.com/sanmuyan/xpkg/xutil"
+	"reflect"
 	"time"
 )
 
@@ -13,6 +14,7 @@ const (
 	SessionTypePassKeyRegister   = "pass_key_register"
 	SessionTypePassKeyLogin      = "pass_key_login"
 	SessionTypeOAuthCode         = "oauth_code"
+	SessionTypeOauthLogin        = "oauth_login"
 	SessionTypeSessionToken      = TokenTypeSession
 	SessionTypeApiToken          = TokenTypeApi
 	SessionTypeOauthAccessToken  = TokenTypeOauthAccess
@@ -37,13 +39,15 @@ type Session struct {
 }
 
 func NewSession(sessionID string, sessionType string, userID int, username string, sessionRaw any) *Session {
-	return &Session{
+	s := &Session{
 		SessionID:   sessionID,
 		SessionType: sessionType,
 		UserID:      userID,
 		Username:    username,
-		SessionRaw:  string(xutil.RemoveError(json.Marshal(sessionRaw))),
-		CreatedAt:   time.Now().UTC()}
+		CreatedAt:   time.Now().UTC(),
+	}
+	s.SessionRaw = s.MarshalSessionRaw(sessionRaw)
+	return s
 }
 
 func (s *Session) SetTimeout(d time.Duration) *Session {
@@ -56,6 +60,15 @@ func (s *Session) IsExpired() bool {
 		return false
 	}
 	return s.ExpiresAt.Before(time.Now().UTC())
+}
+
+func (s *Session) MarshalSessionRaw(sessionRaw any) string {
+	switch reflect.TypeOf(sessionRaw).Kind() {
+	case reflect.String:
+		return sessionRaw.(string)
+	default:
+		return string(xutil.RemoveError(json.Marshal(sessionRaw)))
+	}
 }
 
 func (s *Session) UnmarshalSessionRaw(sessionRaw any) error {

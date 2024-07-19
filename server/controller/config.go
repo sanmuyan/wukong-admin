@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/sanmuyan/xpkg/xresponse"
 	"wukong/pkg/config"
@@ -54,8 +55,9 @@ func GetOauthProvidersConfig(c *gin.Context) {
 }
 
 func UpdateOauthProvidersConfig(c *gin.Context) {
-	var req []config.OauthProvider
+	var req config.OauthProviders
 	if err := c.ShouldBindJSON(&req); err != nil {
+		fmt.Println(err)
 		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}

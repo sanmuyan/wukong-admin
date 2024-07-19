@@ -45,7 +45,7 @@ func PostInit(ctx context.Context) {
 
 // initDynamicConfig 初始化功能模块
 func initDynamicConfig() {
-	oauthlogin.InitOauthProviders()
+	oauthlogin.InitOauthProviderConfig()
 	usersource.InitUserSource()
 	passkey.InitWebAuthnConfig()
 	security.InitPrivateKeys()

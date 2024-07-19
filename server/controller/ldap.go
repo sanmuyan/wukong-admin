@@ -6,6 +6,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"wukong/pkg/config"
 	"wukong/pkg/util"
+	"wukong/server/model"
 )
 
 func SyncLDAPUsers(c *gin.Context) {
@@ -24,11 +25,26 @@ func LDAPConnTest(c *gin.Context) {
 		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
 		return
 	}
-	msg, err := svc.LDAPConnTest(&req)
+	err := svc.LDAPConnTest(&req)
 	if err != nil {
-		logrus.Errorf("测试 LDAP: %s", err.Err)
+		logrus.Errorf("测试 LDAP 连接: %s", err.Err)
 		util.Respf().FailWithError(err).Response(util.GinRespf(c))
 		return
 	}
-	util.Respf().Ok().WithMsg(msg).Response(util.GinRespf(c))
+	util.Respf().Ok().Response(util.GinRespf(c))
+}
+
+func LDAPLoginTest(c *gin.Context) {
+	var req model.LoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		util.Respf().Fail(xresponse.HttpBadRequest).Response(util.GinRespf(c))
+		return
+	}
+	err := svc.LDAPLoginTest(&req)
+	if err != nil {
+		logrus.Errorf("测试 LDAP 用户登录: %s", err.Err)
+		util.Respf().FailWithError(err).Response(util.GinRespf(c))
+		return
+	}
+	util.Respf().Ok().Response(util.GinRespf(c))
 }

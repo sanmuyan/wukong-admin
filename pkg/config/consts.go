@@ -22,4 +22,6 @@ const (
 	PassKeyLoginTimeoutMin = 10
 	// OauthCodeTimeoutMin 登录 session 过期时间，单位分钟
 	OauthCodeTimeoutMin = 5
+	// OauthLoginTimeoutMin 第三方登录超时，单位分钟
+	OauthLoginTimeoutMin = 5
 )

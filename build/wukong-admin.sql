@@ -192,7 +192,6 @@ CREATE TABLE `user_binds`  (
 -- ----------------------------
 -- Table structure for users
 -- ----------------------------
-DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users`  (
                           `id` int NOT NULL AUTO_INCREMENT,
                           `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
@@ -202,10 +201,15 @@ CREATE TABLE `users`  (
                           `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
                           `source` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
                           `is_active` int NOT NULL,
+                          `gitlab_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+                          `dingtalk_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+                          `wecom_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
                           `created_at` datetime NULL DEFAULT NULL,
                           `updated_at` datetime NULL DEFAULT NULL,
                           PRIMARY KEY (`id`) USING BTREE,
-                          UNIQUE INDEX `uq_index_username`(`username` ASC) USING BTREE
-);
+                          UNIQUE INDEX `uq_index_username`(`username` ASC) USING BTREE,
+                          UNIQUE INDEX `uq_index_gitlab_id`(`gitlab_id` ASC) USING BTREE,
+                          UNIQUE INDEX `uq_index_dingtalk_id`(`dingtalk_id` ASC) USING BTREE,
+                          UNIQUE INDEX `uq_index_wecom_id`(`wecom_id` ASC) USING BTREE
 
 SET FOREIGN_KEY_CHECKS = 1;

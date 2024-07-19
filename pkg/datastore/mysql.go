@@ -45,14 +45,14 @@ func (c *MySQLStore) LoadSession(sessionID, sessionType string, sessionRaw any, 
 		return nil, false
 	}
 	if session.IsExpired() {
-		return nil, false
+		return &session, false
 	}
 	if sessionRaw == nil {
-		return nil, true
+		return &session, true
 	}
 	err := session.UnmarshalSessionRaw(sessionRaw)
 	if err != nil {
-		return nil, false
+		return &session, false
 	}
 	return &session, true
 }

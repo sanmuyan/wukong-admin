@@ -34,7 +34,7 @@ type OauthCodeSessionRequest struct {
 	ClientID string `form:"client_id" binding:"required"`
 	// RedirectURI 可选项，请求的回调地址
 	RedirectURI string `form:"redirect_uri"`
-	// Scope 可选项，请求的权限范围，多个权限用逗号隔开
+	// Scope 可选项，请求的权限范围，多个权限用空格隔开
 	Scope string `form:"scope"`
 	// State 可选项，系统将原样返回，可防止跨站请求伪造
 	State string `form:"state"`

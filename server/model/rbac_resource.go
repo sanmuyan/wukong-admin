@@ -6,8 +6,6 @@ import "time"
 type Resource struct {
 	// ID 唯一标识
 	ID int `json:"id"`
-	// ResourceName 资源名称
-	ResourceName string `json:"resource_name"`
 	// ResourcePath 资源路径
 	ResourcePath string `json:"resource_path"`
 	// IsAuth 是否需要鉴权

@@ -48,10 +48,12 @@ type LDAP struct {
 type OauthProvider struct {
 	// Enable 是否启用
 	Enable bool `mapstructure:"enable" json:"enable"`
+	// CorpID 企业微信 CorpID
+	CorpID string `mapstructure:"corp_id" json:"corp_id,omitempty"`
 	// ClientID 客户端 ID
 	ClientID string `mapstructure:"client_id" json:"client_id,omitempty" binding:"required"`
 	// ClientSecret 客户端密钥
-	ClientSecret string `mapstructure:"client_secret" json:"client_secret,omitempty"`
+	ClientSecret string `mapstructure:"client_secret" json:"client_secret,omitempty" binding:"required"`
 	// RedirectURL 回调地址
 	RedirectURL string `mapstructure:"redirect_url" json:"redirect_url,omitempty" binding:"required"`
 	// AuthURL 授权接口
@@ -59,11 +61,16 @@ type OauthProvider struct {
 	// TokenURL 获取 Token 接口
 	TokenURL string `mapstructure:"token_url" json:"token_url,omitempty" binding:"required"`
 	// Scopes 权限范围
-	Scopes []string `mapstructure:"scopes" json:"scopes,omitempty" binding:"required"`
+	Scopes string `mapstructure:"scopes" json:"scopes,omitempty"`
 	// UserInfoURL 获取用户信息接口
 	UserInfoURL string `mapstructure:"user_info_url" json:"user_info_url,omitempty" binding:"required"`
-	// Provider 第三方登录名称
-	Provider string `mapstructure:"provider" json:"provider,omitempty"  binding:"required"`
+}
+
+// OauthProviders 第三方登录配置
+type OauthProviders struct {
+	Gitlab   *OauthProvider `mapstructure:"gitlab" json:"gitlab,omitempty"`
+	Wecom    *OauthProvider `mapstructure:"we_com" json:"we_com,omitempty"`
+	Dingtalk *OauthProvider `mapstructure:"ding_talk" json:"ding_talk,omitempty"`
 }
 
 // Security 安全配置
@@ -78,8 +85,6 @@ type Security struct {
 	LoginLockTime int `mapstructure:"login_lock_time" json:"login_lock_time,omitempty" binding:"required"`
 	// PasswordMinLength 密码最小长度
 	PasswordMinLength int `mapstructure:"password_min_length" json:"password_min_length,omitempty" binding:"required"`
-	// PasswordMaxLength 密码最大长度
-	PasswordMaxLength int `mapstructure:"password_max_length" json:"password_max_length,omitempty" binding:"required"`
 	// PasswordComplexity 密码复杂度
 	PasswordComplexity int `mapstructure:"password_complexity" json:"password_complexity,omitempty" binding:"required"`
 	// PassKeyLogin 是否启用通行密钥登录
@@ -117,7 +122,7 @@ type Config struct {
 	// LDAP 登录配置
 	LDAP LDAP `mapstructure:"ldap" json:"ldap,omitempty"`
 	// OauthProviders 第三方登录配置
-	OauthProviders []OauthProvider `mapstructure:"oauth_providers" json:"oauth_providers,omitempty"`
+	OauthProviders OauthProviders `mapstructure:"oauth_providers" json:"oauth_providers,omitempty"`
 	// Basic 系统基础设置
 	Basic Basic `mapstructure:"basic" json:"basic,omitempty"`
 }
