@@ -56,7 +56,7 @@ func (c *RDBStore) LoadSession(sessionID, sessionType string, sessionRaw any, us
 }
 
 func (c *RDBStore) DeleteSession(sessionID, sessionType string, username ...string) error {
-	return db.RDB.Del(c.ctx, c.generateSessionPath(sessionID, sessionType, username...)).Err()
+	return db.RDB.Del(c.ctx, c.generateSessionPath(sessionType, sessionID, username...)).Err()
 }
 
 func (c *RDBStore) DeleteSessions(sessionType, username string) error {

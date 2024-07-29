@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 	"wukong/pkg/db"
+	"wukong/pkg/util"
 	"wukong/server/model"
 )
 
@@ -20,39 +21,38 @@ func (s *Service) IsAuth(routePath string) bool {
 	return true
 }
 
-func (s *Service) GetUserRoles(userId int) []model.Role {
-	var userRoles []model.Role
-	getUserBinds := func() (userBinds []model.UserBind) {
-		db.DB.Where("user_id = ?", userId).Find(&userBinds)
-		return userBinds
-	}
-	getUserRole := func(userBind model.UserBind) (role model.Role) {
-		db.DB.First(&role, userBind.RoleID)
-		return role
-	}
-	for _, userBind := range getUserBinds() {
-		userRoles = append(userRoles, getUserRole(userBind))
-	}
-	return userRoles
+func (s *Service) GetUserRoles(userID int) []model.Role {
+	var roles []model.Role
+	db.DB.Distinct().Joins("LEFT JOIN user_role_binds ON roles.id = user_role_binds.role_id").
+		Joins("LEFT JOIN group_role_binds ON roles.id = group_role_binds.role_id").
+		Joins("LEFT JOIN user_group_binds ON group_role_binds.group_id = user_group_binds.group_id").
+		Where("user_role_binds.user_id = ? OR user_group_binds.user_id = ?", userID, userID).Find(&roles)
+	return roles
 }
 
-func (s *Service) GetUserResources(roles []model.Role) []model.Resource {
+func (s *Service) GetUserResources(userID int) []model.Resource {
 	var resources []model.Resource
-	getRoleBinds := func(roleID int) (resourceBinds []model.RoleBind) {
-		db.DB.Where("role_id = ?", roleID).Find(&resourceBinds)
-		return resourceBinds
-	}
-	getRoleResource := func(resourceBind model.RoleBind) (resource model.Resource) {
-		db.DB.First(&resource, resourceBind.ResourceID)
-		return resource
-	}
-	for _, role := range roles {
-		getRoleBinds(role.ID)
-		for _, resourceBind := range getRoleBinds(role.ID) {
-			resources = append(resources, getRoleResource(resourceBind))
-		}
-	}
+	db.DB.Distinct().Select("resource_path").
+		Joins("JOIN role_resource_binds ON resources.id = role_resource_binds.resource_id").
+		Joins("JOIN roles ON role_resource_binds.role_id = roles.id").
+		Joins("LEFT JOIN user_role_binds ON roles.id = user_role_binds.role_id").
+		Joins("LEFT JOIN group_role_binds ON roles.id = group_role_binds.role_id").
+		Joins("LEFT JOIN user_group_binds ON group_role_binds.group_id = user_group_binds.group_id").
+		Where("user_role_binds.user_id = ? OR user_group_binds.user_id = ?", userID, userID).Find(&resources)
 	return resources
+}
+
+func (s *Service) IsUserResources(userID int, resourcePath string) bool {
+	if tx := db.DB.Limit(1).Select("resource_path").
+		Joins("JOIN role_resource_binds ON resources.id = role_resource_binds.resource_id").
+		Joins("JOIN roles ON role_resource_binds.role_id = roles.id").
+		Joins("LEFT JOIN user_role_binds ON roles.id = user_role_binds.role_id").
+		Joins("LEFT JOIN group_role_binds ON roles.id = group_role_binds.role_id").
+		Joins("LEFT JOIN user_group_binds ON group_role_binds.group_id = user_group_binds.group_id").
+		Where("(user_role_binds.user_id = ? OR user_group_binds.user_id = ?) AND resources.resource_path = ?", userID, userID, resourcePath).First(&model.Resource{}); tx.RowsAffected > 0 {
+		return true
+	}
+	return false
 }
 
 func (s *Service) GetMaxAccessLevel(roles []model.Role) int {
@@ -109,23 +109,152 @@ func (s *Service) IsAccessResource(token *model.Token, c *gin.Context) bool {
 		return true
 	}
 
-	resources := s.GetUserResources(s.GetUserRoles(token.GetUserID()))
-	for _, resource := range resources {
-		// 判断客户端请求的 resource 是否等于 role 列表中的 resource
-		// 支持父路径匹配 比如资源中有resourcePath=/api 客户端请求resourcePath=/api/user, 那么认为是有权限的
-		rr := strings.ToLower(resource.ResourcePath)
-		rp := strings.ToLower(routePath)
-		// 前缀匹配
-		//if strings.HasPrefix(rp, rr) {
-		//	return true
-		//}
-		if rr == rp {
-			return true
-		}
-		// 子路径匹配
-		if xutil.IsSubPath(rr, rp) {
-			return true
-		}
+	//resources := s.GetUserResources(token.GetUserID())
+	//for _, resource := range resources {
+	//	// 判断客户端请求的 resource 是否等于 role 列表中的 resource
+	//	// 支持父路径匹配 比如资源中有resourcePath=/api 客户端请求resourcePath=/api/user, 那么认为是有权限的
+	//	rr := strings.ToLower(resource.ResourcePath)
+	//	rp := strings.ToLower(routePath)
+	//	// 前缀匹配
+	//	//if strings.HasPrefix(rp, rr) {
+	//	//	return true
+	//	//}
+	//	if rr == rp {
+	//		return true
+	//	}
+	//	// 子路径匹配
+	//	if xutil.IsSubPath(rr, rp) {
+	//		return true
+	//	}
+	//}
+	return s.IsUserResources(token.GetUserID(), routePath)
+}
+
+func (s *Service) GetResources(query *model.Query) (*model.Resources, util.RespError) {
+	var resources model.Resources
+	err := queryData(query, &resources)
+	if err != nil {
+		return nil, util.NewRespError(err)
 	}
-	return false
+	return &resources, nil
+}
+
+func (s *Service) CreateResource(resource *model.Resource) util.RespError {
+	if err := db.DB.Create(&resource).Error; err != nil {
+		return util.NewRespError(err)
+	}
+	return nil
+}
+
+func (s *Service) UpdateResource(resource *model.Resource) util.RespError {
+	if err := db.DB.Updates(&resource).Error; err != nil {
+		return util.NewRespError(err)
+	}
+	return nil
+}
+
+func (s *Service) DeleteResource(resource *model.Resource) util.RespError {
+	if err := db.DB.Delete(&model.Resource{}, resource.ID).Error; err != nil {
+		return util.NewRespError(err)
+	}
+	return nil
+}
+
+func (s *Service) GetRoles(query *model.Query) (*model.Roles, util.RespError) {
+	var roles model.Roles
+	err := queryData(query, &roles)
+	if err != nil {
+		return nil, util.NewRespError(err)
+	}
+	return &roles, nil
+}
+
+func (s *Service) CreateRole(role *model.Role) util.RespError {
+	if err := db.DB.Create(&role).Error; err != nil {
+		return util.NewRespError(err)
+	}
+	return nil
+}
+
+func (s *Service) UpdateRole(role *model.Role) util.RespError {
+	if err := db.DB.Updates(&role).Error; err != nil {
+		return util.NewRespError(err)
+	}
+	return nil
+}
+
+func (s *Service) DeleteRole(role *model.Role) util.RespError {
+	if err := db.DB.Delete(&model.Role{}, role.ID).Error; err != nil {
+		return util.NewRespError(err)
+	}
+	return nil
+}
+
+func (s *Service) GetRoleResourceBinds(query *model.Query) (*model.RoleResourceBinds, util.RespError) {
+	var roleResourceBinds model.RoleResourceBinds
+	err := queryData(query, &roleResourceBinds)
+	if err != nil {
+		return nil, util.NewRespError(err)
+	}
+	return &roleResourceBinds, nil
+}
+
+func (s *Service) CreateRoleResourceBind(roleResourceBind *model.RoleResourceBind) util.RespError {
+	if err := db.DB.Create(&roleResourceBind).Error; err != nil {
+		return util.NewRespError(err)
+	}
+	return nil
+}
+
+func (s *Service) DeleteRoleResourceBind(roleResourceBind *model.RoleResourceBind) util.RespError {
+	if err := db.DB.Delete(&model.RoleResourceBind{}, roleResourceBind.ID).Error; err != nil {
+		return util.NewRespError(err)
+	}
+	return nil
+}
+
+func (s *Service) GetUserRoleBinds(query *model.Query) (*model.UserRoleBinds, util.RespError) {
+	var userRoleBinds model.UserRoleBinds
+	err := queryData(query, &userRoleBinds)
+	if err != nil {
+		return nil, util.NewRespError(err)
+	}
+	return &userRoleBinds, nil
+}
+
+func (s *Service) CreateUserRoleBind(userRoleBind *model.UserRoleBind) util.RespError {
+	if err := db.DB.Create(&userRoleBind).Error; err != nil {
+		return util.NewRespError(err)
+	}
+	return nil
+}
+
+func (s *Service) DeleteUserRoleBind(userRoleBind *model.UserRoleBind) util.RespError {
+	if err := db.DB.Delete(&model.UserRoleBind{}, userRoleBind.ID).Error; err != nil {
+		return util.NewRespError(err)
+	}
+	return nil
+}
+
+func (s *Service) GetGroupRoleBinds(query *model.Query) (*model.GroupRoleBinds, util.RespError) {
+	var groupRoleBinds model.GroupRoleBinds
+	err := queryData(query, &groupRoleBinds)
+	if err != nil {
+		return nil, util.NewRespError(err)
+	}
+	return &groupRoleBinds, nil
+}
+
+func (s *Service) CreateGroupRoleBind(groupRoleBind *model.GroupRoleBind) util.RespError {
+	if err := db.DB.Create(&groupRoleBind).Error; err != nil {
+		return util.NewRespError(err)
+	}
+	return nil
+}
+
+func (s *Service) DeleteGroupRoleBind(groupRRoleBind *model.GroupRoleBind) util.RespError {
+	if err := db.DB.Delete(&model.UserRoleBind{}, groupRRoleBind.ID).Error; err != nil {
+		return util.NewRespError(err)
+	}
+	return nil
 }

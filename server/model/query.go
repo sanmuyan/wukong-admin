@@ -41,16 +41,55 @@ func (r *Users) GetPage() *page.Page {
 	return &r.Page
 }
 
-type UserBinds struct {
-	UserBinds []UserBind `json:"user_binds"`
+type UserGroupBinds struct {
+	UserGroupBinds []UserGroupBind `json:"user_group_binds"`
 	page.Page
 }
 
-func (r *UserBinds) GetData() any {
-	return &r.UserBinds
+func (r *UserGroupBinds) GetData() any {
+	return &r.UserGroupBinds
 }
 
-func (r *UserBinds) GetPage() *page.Page {
+func (r *UserGroupBinds) GetPage() *page.Page {
+	return &r.Page
+}
+
+type Groups struct {
+	Users []Group `json:"groups"`
+	page.Page
+}
+
+func (r *Groups) GetData() any {
+	return &r.Users
+}
+
+func (r *Groups) GetPage() *page.Page {
+	return &r.Page
+}
+
+type UserRoleBinds struct {
+	UserRoleBinds []UserRoleBind `json:"user_role_binds"`
+	page.Page
+}
+
+func (r *UserRoleBinds) GetData() any {
+	return &r.UserRoleBinds
+}
+
+func (r *UserRoleBinds) GetPage() *page.Page {
+	return &r.Page
+}
+
+type GroupRoleBinds struct {
+	GroupRoleBinds []GroupRoleBind `json:"group_role_binds"`
+	page.Page
+}
+
+func (r *GroupRoleBinds) GetData() any {
+	return &r.GroupRoleBinds
+}
+
+func (r *GroupRoleBinds) GetPage() *page.Page {
 	return &r.Page
 }
 
@@ -67,16 +106,16 @@ func (r *Roles) GetPage() *page.Page {
 	return &r.Page
 }
 
-type RoleBinds struct {
-	RoleBinds []RoleBind `json:"role_binds"`
+type RoleResourceBinds struct {
+	RoleResourceBinds []RoleResourceBind `json:"role_resource_binds"`
 	page.Page
 }
 
-func (r *RoleBinds) GetData() any {
-	return &r.RoleBinds
+func (r *RoleResourceBinds) GetData() any {
+	return &r.RoleResourceBinds
 }
 
-func (r *RoleBinds) GetPage() *page.Page {
+func (r *RoleResourceBinds) GetPage() *page.Page {
 	return &r.Page
 }
 

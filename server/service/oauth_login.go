@@ -100,23 +100,23 @@ func (s *Service) OauthBindCallback(token *model.Token, code string, state strin
 	case model.UserGitlabIDField:
 		tx := db.DB.Where(fmt.Sprintf("%s = ?", model.UserGitlabIDField), oUser.GetUserID()).Select("id").First(&model.User{})
 		if tx.RowsAffected > 0 {
-			return util.NewRespError(errors.New("不允许多次绑定"), true).WithCode(xresponse.HttpBadRequest)
+			db.DB.Model(&model.User{}).Where(fmt.Sprintf("%s = ?", model.UserGitlabIDField), oUser.GetUserID()).Update(model.UserGitlabIDField, nil)
 		}
 		user.GitlabID = xutil.PtrTo(oUser.GetUserID())
 	case model.UserWecomIDField:
 		tx := db.DB.Where(fmt.Sprintf("%s = ?", model.UserWecomIDField), oUser.GetUserID()).Select("id").First(&model.User{})
 		if tx.RowsAffected > 0 {
-			return util.NewRespError(errors.New("不允许多次绑定"), true).WithCode(xresponse.HttpBadRequest)
+			db.DB.Model(&model.User{}).Where(fmt.Sprintf("%s = ?", model.UserWecomIDField), oUser.GetUserID()).Update(model.UserWecomIDField, nil)
 		}
 		user.WecomID = xutil.PtrTo(oUser.GetUserID())
 	case model.UserDingtalkIDField:
 		tx := db.DB.Where(fmt.Sprintf("%s = ?", model.UserDingtalkIDField), oUser.GetUserID()).Select("id").First(&model.User{})
 		if tx.RowsAffected > 0 {
-			return util.NewRespError(errors.New("不允许多次绑定"), true).WithCode(xresponse.HttpBadRequest)
+			db.DB.Model(&model.User{}).Where(fmt.Sprintf("%s = ?", model.UserDingtalkIDField), oUser.GetUserID()).Update(model.UserDingtalkIDField, nil)
 		}
 		user.DingtalkID = xutil.PtrTo(oUser.GetUserID())
 	default:
-		return util.NewRespError(errors.New("不支持的绑定"), true).WithCode(xresponse.HttpBadRequest)
+		return util.NewRespError(errors.New("未知登录"), true).WithCode(xresponse.HttpBadRequest)
 	}
 	err = db.DB.Where("id = ?", token.GetUserID()).Updates(&user).Error
 	if err != nil {

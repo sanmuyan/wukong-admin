@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/sanmuyan/xpkg/xjwt"
 	"github.com/sanmuyan/xpkg/xutil"
@@ -46,5 +45,5 @@ func (s *Service) CreateOrSetToken(token *model.Token, expiresAt int) (string, e
 }
 
 func (s *Service) DeleteTokenSession(token *model.Token) error {
-	return datastore.DS.DeleteSession(token.TokenID, token.TokenType, fmt.Sprintf("%s:%s:%s", token.TokenType, token.Username, token.TokenID))
+	return datastore.DS.DeleteSession(token.TokenID, token.TokenType, token.Username)
 }

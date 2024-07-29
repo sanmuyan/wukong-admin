@@ -91,8 +91,8 @@ INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/acc
 INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/account/modifyPassword', -1, '修改密码');
 INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/role', 1, '角色');
 INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/resource', 1, '权限资源');
-INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/roleBind', 1, '角色绑定资源');
-INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/userBind', 1, '用户绑定角色');
+INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/roleResourceBind', 1, '资源绑定资源');
+INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/userRoleBind', 1, '用户绑定角色');
 INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/token', 1, '用户 Token');
 INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/ldap/user/sync', 1, '同步 LDAP 用户');
 INSERT INTO `resources`(`resource_path`, `is_auth`, `comment`) VALUES ('/api/oauth/authorize/frontRedirect', -1, '应用登录');

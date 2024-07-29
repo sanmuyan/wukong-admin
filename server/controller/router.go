@@ -45,6 +45,17 @@ func router(r *gin.Engine) {
 		apiGroup.PUT("/user", UpdateUser)
 		apiGroup.DELETE("/user", DeleteUser)
 
+		// 用户组管理
+		apiGroup.GET("/group", GetGroups)
+		apiGroup.POST("/group", CreateGroup)
+		apiGroup.PUT("/group", UpdateGroup)
+		apiGroup.DELETE("/group", DeleteGroup)
+
+		// 用户组绑定
+		apiGroup.GET("/userGroupBind", GetUserGroupBinds)
+		apiGroup.POST("/userGroupBind", CreateUserGroupBinds)
+		apiGroup.DELETE("/userGroupBind", DeleteUserGroupBinds)
+
 		// 账号资料
 		apiGroup.GET("/account/profile", GetProfile)
 		apiGroup.PUT("/account/profile", UpdateProfile)
@@ -87,14 +98,19 @@ func router(r *gin.Engine) {
 		apiGroup.DELETE("/resource", DeleteResource)
 
 		// 角色权限管理
-		apiGroup.GET("/roleBind", GetRoleBinds)
-		apiGroup.POST("/roleBind", CreateRoleBinds)
-		apiGroup.DELETE("/roleBind", DeleteRoleBinds)
+		apiGroup.GET("/roleResourceBind", GetRoleResourceBinds)
+		apiGroup.POST("/roleResourceBind", CreateRoleResourceBinds)
+		apiGroup.DELETE("/roleResourceBind", DeleteRoleResourceBinds)
 
 		// 用户权限管理
-		apiGroup.GET("/userBind", GetUserBinds)
-		apiGroup.POST("/userBind", CreateUserBinds)
-		apiGroup.DELETE("/userBind", DeleteUserBinds)
+		apiGroup.GET("/userRoleBind", GetUserRoleBinds)
+		apiGroup.POST("/userRoleBind", CreateUserRoleBinds)
+		apiGroup.DELETE("/userRoleBind", DeleteUserRoleBinds)
+
+		// 用户权限管理
+		apiGroup.GET("/groupRoleBind", GetGroupRoleBinds)
+		apiGroup.POST("/groupRoleBind", CreateGroupRoleBinds)
+		apiGroup.DELETE("/groupRoleBind", DeleteGroupRoleBinds)
 
 		// Token 管理
 		apiGroup.POST("/token", CreateToken)
