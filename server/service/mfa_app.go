@@ -10,6 +10,7 @@ import (
 	"wukong/pkg/config"
 	"wukong/pkg/datastore"
 	"wukong/pkg/db"
+	"wukong/pkg/security"
 	"wukong/pkg/util"
 	"wukong/server/model"
 )
@@ -26,7 +27,7 @@ func (s *Service) GetMFAAppStatus(token *model.Token) (any, util.RespError) {
 
 func (s *Service) MFAAppBeginBind(token *model.Token) (*model.MFAAppBindResponse, util.RespError) {
 	totpSecret := xutil.RemoveError(xmfa.GenerateTOTPSecret(config.TOTPSecretLength))
-	sessionID := util.GetRandomID()
+	sessionID := security.GetSessionID()
 	err := datastore.DS.StoreSession(model.NewSession(sessionID, model.SessionTypeMFAAppBind, token.GetUserID(), token.Username, &model.MFAAppBindSession{
 		TOTPSecret: totpSecret,
 	}).SetTimeout(config.MFABindTimeoutMin * time.Minute))

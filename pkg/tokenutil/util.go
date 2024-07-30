@@ -27,9 +27,9 @@ func validToken(tokenStr string) (*model.Token, error) {
 			return nil, errors.New("令牌已过期")
 		}
 	}
-	if !config.Conf.Security.DisableVerifyServerToken {
-		if _, ok := datastore.DS.LoadSession(token.TokenID, token.TokenType, nil, token.Username); !ok {
-			return nil, errors.New("服务器令牌已过期")
+	if config.Conf.Security.VerifyTokenSession {
+		if _, ok := datastore.DS.LoadSession(token.SessionID, token.TokenType, nil, token.Username); !ok {
+			return nil, errors.New("会话已过期")
 		}
 	}
 	var user model.User

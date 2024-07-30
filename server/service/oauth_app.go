@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/sanmuyan/xpkg/xcrypto"
 	"wukong/pkg/db"
+	"wukong/pkg/security"
 	"wukong/pkg/util"
 	"wukong/server/model"
 )
@@ -17,7 +18,7 @@ func (s *Service) GetOauthApps(query *model.Query) (*model.OauthApps, util.RespE
 }
 
 func (s *Service) CreateOauthApp(oauthApp *model.OauthApp) util.RespError {
-	oauthApp.ClientID = util.GetRandomID()
+	oauthApp.ClientID = security.GetRandomID()
 	oauthApp.ClientSecret = xcrypto.GenerateRandomString(64, true, true, true, false)
 	if err := db.DB.Create(&oauthApp).Error; err != nil {
 		return util.NewRespError(err)

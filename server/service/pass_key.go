@@ -15,6 +15,7 @@ import (
 	"wukong/pkg/datastore"
 	"wukong/pkg/db"
 	"wukong/pkg/passkey"
+	"wukong/pkg/security"
 	"wukong/pkg/util"
 	"wukong/server/model"
 )
@@ -78,7 +79,7 @@ func (s *Service) PassKeyBeginRegistration(token *model.Token) (*model.PassKeyBe
 	if err != nil {
 		return nil, util.NewRespError(err)
 	}
-	sessionID := util.GetRandomID()
+	sessionID := security.GetSessionID()
 	err = datastore.DS.StoreSession(model.NewSession(sessionID, model.SessionTypePassKeyRegister, token.GetUserID(), token.Username, &model.PassKeyRegisterSession{
 		SessionData: *session,
 	}).SetTimeout(config.PassKeyRegistrationTimeoutMin * time.Minute))
@@ -141,7 +142,7 @@ func (s *Service) BeginPassKeyLogin(req *model.PassKeyBeginLoginRequest) (*model
 	if err != nil {
 		return nil, util.NewRespError(err).WithCode(xresponse.HttpBadRequest)
 	}
-	sessionID := util.GetRandomID()
+	sessionID := security.GetSessionID()
 	err = datastore.DS.StoreSession(model.NewSession(sessionID, model.SessionTypePassKeyLogin, user.ID, user.Username,
 		&model.PassKeyLoginSession{
 			SessionData: *session,

@@ -8,8 +8,8 @@ import (
 	"wukong/pkg/config"
 	"wukong/pkg/datastore"
 	"wukong/pkg/db"
+	"wukong/pkg/security"
 	"wukong/pkg/tokenutil"
-	"wukong/pkg/util"
 	"wukong/server/model"
 )
 
@@ -33,7 +33,7 @@ func (s *Service) GetOauthCodeSession(token *model.Token, req *model.OauthCodeSe
 			return code, model.NewOauthErrorResponse("invalid_scope")
 		}
 	}
-	sessionID := util.GetRandomID()
+	sessionID := security.GetSessionID()
 	code = sessionID
 	oauthCode := model.OauthCodeSession{
 		Code:         sessionID,
@@ -164,7 +164,7 @@ func (s *Service) RevokeOauthToken(req *model.OauthRevokeTokenRequest) *model.Oa
 	if token.TokenType != model.TokenTypeOauthRefresh {
 		return model.NewOauthErrorResponse("invalid_token")
 	}
-	err := datastore.DS.DeleteSession(token.TokenID, token.TokenType, fmt.Sprintf("%s:%s:%s", token.TokenType, token.Username, token.TokenID))
+	err := datastore.DS.DeleteSession(token.SessionID, token.TokenType, fmt.Sprintf("%s:%s:%s", token.TokenType, token.Username, token.SessionID))
 	if err != nil {
 		return model.NewOauthErrorResponse("server_error")
 	}

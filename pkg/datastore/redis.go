@@ -3,11 +3,13 @@ package datastore
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/sanmuyan/xpkg/xutil"
 	"time"
 	"wukong/pkg/config"
 	"wukong/pkg/db"
+	"wukong/pkg/security"
 	"wukong/server/model"
 )
 
@@ -28,10 +30,17 @@ func (c *RDBStore) StoreSession(s *model.Session, username ...string) error {
 	if s.ExpiresAt != nil {
 		expires = s.ExpiresAt.Sub(time.Now().UTC())
 	}
+	res, _ := db.RDB.Exists(c.ctx, c.generateSessionPath(s.SessionType, s.SessionID, username...)).Result()
+	if res > 0 {
+		return errors.New("session already exists")
+	}
 	return db.RDB.Set(c.ctx, c.generateSessionPath(s.SessionType, s.SessionID, username...), xutil.RemoveError(json.Marshal(s)), expires).Err()
 }
 
 func (c *RDBStore) LoadSession(sessionID, sessionType string, sessionRaw any, username ...string) (*model.Session, bool) {
+	if !security.VerifySessionID(sessionID) {
+		return nil, false
+	}
 	res, _ := db.RDB.Exists(c.ctx, c.generateSessionPath(sessionType, sessionID, username...)).Result()
 	if res == 0 {
 		return nil, false

@@ -8,6 +8,7 @@ import (
 	"wukong/pkg/datastore"
 	"wukong/pkg/db"
 	"wukong/pkg/mfalogin"
+	"wukong/pkg/security"
 	"wukong/pkg/util"
 	"wukong/server/model"
 )
@@ -19,7 +20,7 @@ func (s *Service) mfaBeginLogin(user *model.User) (*model.MFABeginLoginResponse,
 		return nil, tx.Error
 	}
 	if tx.RowsAffected > 0 {
-		sessionID := util.GetRandomID()
+		sessionID := security.GetSessionID()
 		err := datastore.DS.StoreSession(model.NewSession(sessionID, model.SessionTypeMFALogin, user.ID, user.Username, model.MFALoginSession{
 			MFAProvider: model.MFAProviderMFAApp,
 		}).SetTimeout(config.MFALoginTimeoutMin * time.Minute))

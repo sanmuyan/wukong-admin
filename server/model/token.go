@@ -11,8 +11,8 @@ import (
 type Token struct {
 	// userID 用户 ID 仅供系统内部使用
 	userID int
-	// TokenID 唯一标识，使用 UUID 生成
-	TokenID string `json:"token_id"`
+	// SessionID 唯一标识，使用 UUID 生成
+	SessionID string `json:"session_id"`
 	// Username 用户名
 	Username string `json:"username" binding:"required"`
 	// AccessLevel 访问级别

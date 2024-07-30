@@ -6,7 +6,7 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-ldap/ldap/v3 v3.4.8
 	github.com/go-redis/redis/v8 v8.11.5
-	github.com/sanmuyan/xpkg v0.1.20
+	github.com/sanmuyan/xpkg v0.1.21
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.15.0

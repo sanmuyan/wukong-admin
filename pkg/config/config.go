@@ -77,8 +77,8 @@ type OauthProviders struct {
 type Security struct {
 	// TokenTTL Token 过期时间，单位秒
 	TokenTTL int `mapstructure:"token_ttl" json:"token_ttl,omitempty"  binding:"required"`
-	// DisableVerifyServerToken 是否禁用服务器端验证 Token 是否有效
-	DisableVerifyServerToken bool `mapstructure:"disable_verify_server_token" json:"disable_verify_server_token,omitempty" binding:"required"`
+	// VerifyTokenSession 验证令牌会话是否有效
+	VerifyTokenSession bool `mapstructure:"verify_token_session" json:"verify_token_session"`
 	// LoginMaxFails 用户登录失败多少次后锁定
 	LoginMaxFails int `mapstructure:"login_max_fails" json:"login_max_fails,omitempty" binding:"required"`
 	// LoginLockTime 登录失败阈值锁定时间

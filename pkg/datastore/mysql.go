@@ -5,6 +5,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"time"
 	"wukong/pkg/db"
+	"wukong/pkg/security"
 	"wukong/server/model"
 )
 
@@ -39,6 +40,9 @@ func (c *MySQLStore) StoreSession(s *model.Session, username ...string) error {
 }
 
 func (c *MySQLStore) LoadSession(sessionID, sessionType string, sessionRaw any, username ...string) (*model.Session, bool) {
+	if !security.VerifySessionID(sessionID) {
+		return nil, false
+	}
 	var session model.Session
 	tx := db.DB.Where("session_id = ? AND session_type = ?", sessionID, sessionType).First(&session)
 	if tx.RowsAffected == 0 {

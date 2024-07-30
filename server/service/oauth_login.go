@@ -10,6 +10,7 @@ import (
 	"wukong/pkg/datastore"
 	"wukong/pkg/db"
 	"wukong/pkg/oauthlogin"
+	"wukong/pkg/security"
 	"wukong/pkg/util"
 	"wukong/server/model"
 )
@@ -26,7 +27,7 @@ func (s *Service) OauthLogin(provider string) (any, util.RespError) {
 	if !opConf.Enable {
 		return nil, util.NewRespError(errors.New("登录未开启"), true)
 	}
-	state := util.GetRandomID()
+	state := security.GetSessionID()
 	err := datastore.DS.StoreSession(model.NewSession(state, model.SessionTypeOauthLogin, 0, "", provider).SetTimeout(config.OauthLoginTimeoutMin * time.Minute))
 	if err != nil {
 		return nil, util.NewRespError(err)
