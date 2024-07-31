@@ -12,6 +12,8 @@ type Database struct {
 type Secret struct {
 	// Token JWT 密钥
 	TokenKey string `mapstructure:"token_key"`
+	// SessionKey Session hmac 密钥
+	SessionKey string `mapstructure:"session_key"`
 }
 
 // AttributeMap 用于映射 LDAP 属性

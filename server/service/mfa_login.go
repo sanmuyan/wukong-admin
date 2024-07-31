@@ -2,7 +2,6 @@ package service
 
 import (
 	"errors"
-	"gorm.io/gorm"
 	"time"
 	"wukong/pkg/config"
 	"wukong/pkg/datastore"
@@ -15,8 +14,8 @@ import (
 
 func (s *Service) mfaBeginLogin(user *model.User) (*model.MFABeginLoginResponse, error) {
 	var mfaApp = model.MFAApp{}
-	tx := db.DB.Where("user_id = ?", user.ID).First(&mfaApp)
-	if tx.Error != nil && !errors.Is(tx.Error, gorm.ErrRecordNotFound) {
+	tx := db.DB.Where("user_id = ?", user.ID).Find(&mfaApp).Limit(1)
+	if tx.Error != nil {
 		return nil, tx.Error
 	}
 	if tx.RowsAffected > 0 {

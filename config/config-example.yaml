@@ -4,9 +4,12 @@ basic:
 database:
   mysql: root:password@tcp(localhost:3306)/wukong?parseTime=true
   redis: localhost:6379
+# 需要保密的配置，应该使用 AES-CFB 加密
 secret:
-  # 用于 JWT 签名的密钥，该字符串应该使用 CFB 加密
+  # 用于 JWT 签名的密钥，长度应该为32
   token_key: ""
+  # 用于 Session ID 签名的密钥，长度应该为16
+  session_key: ""
 # 日志级别
 log_level: 4
 # 临时数据存储数据库类型

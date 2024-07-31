@@ -3,12 +3,12 @@ package security
 import (
 	"github.com/google/uuid"
 	"github.com/sanmuyan/xpkg/xcrypto"
+	"github.com/sanmuyan/xpkg/xutil"
 	"wukong/pkg/config"
 )
 
 const (
-	SessionIDLength     = 36
-	SessionIDHashLength = 64
+	SessionIDLength = 36
 )
 
 func GetRandomID() string {
@@ -17,14 +17,16 @@ func GetRandomID() string {
 
 func GetSessionID() string {
 	id := GetRandomID()
-	return id + xcrypto.GenerateHmacSha256(id, config.Conf.Secret.TokenKey)
+	return xutil.RemoveError(xcrypto.GenerateHmacSha1(id, config.Conf.Secret.SessionKey)) + id
 }
 
 func VerifySessionID(sessionID string) bool {
-	if len(sessionID) != (SessionIDLength + SessionIDHashLength) {
+	sl := len(sessionID)
+	if sl <= SessionIDLength {
 		return false
 	}
-	message := sessionID[:SessionIDLength]
-	hash := sessionID[SessionIDLength:]
-	return xcrypto.GenerateHmacSha256(message, config.Conf.Secret.TokenKey) == hash
+	hl := sl - SessionIDLength
+	message := sessionID[hl:]
+	hash := sessionID[:hl]
+	return xutil.RemoveError(xcrypto.GenerateHmacSha1(message, config.Conf.Secret.SessionKey)) == hash
 }
