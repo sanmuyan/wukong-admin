@@ -39,7 +39,7 @@ func PostInit(ctx context.Context) {
 	logrus.Debugf("config %+v", config.Conf)
 	// 动态加载配置
 	go loadDBConfigTask(ctx)
-	// 启动 WEB 服务
+	// 启动 HTTP 服务
 	controller.RunServer(ctx, config.Conf.ServerBind)
 }
 
